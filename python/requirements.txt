@@ -1,0 +1,7 @@
+# Exact versions, tested together on macOS (Apple Silicon) with Python 3.14.
+# mediapipe installs its own copy of OpenCV (opencv-contrib-python), so do NOT
+# also install opencv-python: two copies of OpenCV in one environment conflict.
+mediapipe==1.2.0
+opencv-contrib-python==5.0.0.93
+python-osc==1.10.2
+numpy==2.5.4

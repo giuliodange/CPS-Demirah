@@ -1,0 +1,8 @@
+# Python environment and caches
+.venv/
+__pycache__/
+# macOS and Processing clutter
+.DS_Store
+*.autosave
+# Wi-Fi password for the ESP32-CAM: copy secrets.example.h to secrets.h, never commit it
+esp32_cam/CameraWebServer/secrets.h
