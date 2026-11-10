@@ -60,9 +60,10 @@ void drawTwin() {
   drawColumn(BASE_HEIGHT, JOINT_HEIGHT, color(150, 118, 88), color(205, 180, 150));
 
   // Head: move to the joint, tilt with axis Y, and draw from there.
-  // The minus sign makes positive angles look down.
+  // Tilt 0 is all the way down and Y_LEVEL_DEG looks straight ahead, so the head is drawn
+  // pitched by (tilt - Y_LEVEL_DEG): negative = down, positive = up.
   translate(0, -JOINT_HEIGHT, JOINT_Z);
-  rotateX(-radians(angleY + nodY));
+  rotateX(radians(angleY + nodY - Y_LEVEL_DEG));
   fill(110, 110, 115);
   sphere(22);
   drawRod(MIRROR_OFFSET - MIRROR_THICKNESS - MAX_SAG_MM);
@@ -238,7 +239,7 @@ void drawBall(float degreesX, float degreesY) {
   pushMatrix();
   translate(0, -JOINT_HEIGHT, JOINT_Z);
   rotateY(radians(degreesX));
-  rotateX(-radians(degreesY));
+  rotateX(radians(degreesY - Y_LEVEL_DEG));
   translate(0, 0, PERSON_DISTANCE);
   fill(230, 70, 70);
   sphere(30);

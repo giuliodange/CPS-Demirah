@@ -52,8 +52,9 @@ final float DEAD_ZONE_DEG = 2;         // Degrees. A face this close to the cent
 final float XY_SMOOTHING = 0.3;        // 0 to 1. Fraction of the remaining distance covered each frame: higher = more reactive. (docs/calibration.md, step 5)
 final float X_MIN_DEG = -100;          // Degrees. TODO CALIBRATE: keep the same as in mirror.ino.
 final float X_MAX_DEG = 100;           // Degrees. TODO CALIBRATE
-final float Y_MIN_DEG = -30;           // Degrees. TODO CALIBRATE
-final float Y_MAX_DEG = 30;            // Degrees. TODO CALIBRATE
+final float Y_MIN_DEG = 0;             // Degrees. 0 = the head at rest, all the way down (cord slack). Keep it 0.
+final float Y_MAX_DEG = 30;            // Degrees. Highest tilt the cord can pull the head to. TODO CALIBRATE: keep the same as in mirror.ino.
+final float Y_LEVEL_DEG = 15;          // Degrees. The tilt where the mirror looks straight ahead: idle rests here. TODO CALIBRATE (docs/calibration.md, step 2)
 
 // --- States ---
 final float NO_FACE_TIMEOUT_S = 3;     // Seconds without a face before it gets sad.
@@ -63,7 +64,7 @@ final float GREETING_RADIUS_DEG = 10;  // Degrees. Size of the happy circles.
 final float SHY_SWITCH_S = 2.5;        // Seconds it looks at one face before turning to the other.
 final float SHY_EXIT_S = 4;            // Seconds with only one face before it stops being shy. Keep it above SHY_SWITCH_S.
 final float SAD_S = 2;                 // Seconds it stays sad before going idle. Its blue fades to dark over this time.
-final float SAD_TILT_DEG = 25;         // Degrees. How far it looks down when sad (positive = down).
+final float SAD_TILT_DEG = 0;          // Degrees. Where it looks when sad: 0 = all the way down.
 final float GENTLE_SMOOTHING = 0.04;   // 0 to 1. Like XY_SMOOTHING, but slower: used when getting sad and going back to idle.
 final float WINK_NOD_DEG = 3;          // Degrees. How far the head nods up and down after a wink: very little.
 final float WINK_NOD_PERIOD_S = 0.8;   // Seconds for one nod.
@@ -225,8 +226,9 @@ float signX() {
   return INVERT_X ? -1 : 1;
 }
 
+// Positive tilt is up, but in the image y grows downwards: hence the -1.
 float signY() {
-  return INVERT_Y ? -1 : 1;
+  return INVERT_Y ? 1 : -1;
 }
 
 void mouseWheel(MouseEvent event) {
@@ -322,15 +324,17 @@ void updateMotion() {
     targetX = shyX[side];
     targetY = shyY[side];
   } else if (state.equals("greeting")) {
-    // Happy circles, starting and ending where it was. Negative y is up, so they go upwards.
+    // Happy circles, starting and ending where it was. They go up from the lower half of the
+    // range and down from the upper half, so they stay inside the limits.
     float turn = TWO_PI * GREETING_TURNS * min(secondsInState / GREETING_S, 1);
+    float upOrDown = greetCenterY < (Y_MIN_DEG + Y_MAX_DEG) / 2 ? 1 : -1;
     targetX = greetCenterX + GREETING_RADIUS_DEG * sin(turn);
-    targetY = greetCenterY - GREETING_RADIUS_DEG * (1 - cos(turn));
+    targetY = greetCenterY + upOrDown * GREETING_RADIUS_DEG * (1 - cos(turn));
   } else if (state.equals("sad")) {
     targetY = SAD_TILT_DEG;
   } else if (state.equals("idle")) {
     targetX = 0;
-    targetY = 0;
+    targetY = Y_LEVEL_DEG;
   }
   newFace = false;
 

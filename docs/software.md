@@ -16,7 +16,7 @@ All OSC traffic stays on the computer (`127.0.0.1`): Processing listens on port 
 
 | Value | Meaning |
 |---|---|
-| `x`, `y` | Rotation and tilt, in degrees. Positive tilt looks down |
+| `x`, `y` | Rotation and tilt, in degrees. Tilt goes from 0 (head all the way down, at rest) to `Y_MAX_DEG` (up) |
 | `r`, `g`, `b` | Solid LED colour, 0-255 |
 | `c` | Convexity, from -1 (concave) to +1 (convex) |
 | `phase`, `mix` | Rainbow position (0-1), and the blend between the solid colour (0) and the rainbow (1) |

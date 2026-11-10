@@ -6,7 +6,7 @@
   Serial Monitor: 115200 baud, line ending "Newline". Type a letter, then any numbers.
 
     x 100       move stepper X (rotation) by 100 steps (negative = other way)
-    y 100       move stepper Y (tilt) by 100 steps (negative = other way)
+    y 100       move stepper Y (tilt) by 100 steps (positive should lift the head, negative = other way)
     p           print the current positions
     z           call the current positions 0
     s 1500      send the convexity servo a 1500 microsecond pulse (about 1000 to 2000)

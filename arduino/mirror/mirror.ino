@@ -4,7 +4,7 @@
   Processing sends a line of text such as "12.5,-3.0,255,180,40,-0.25,0.420,0.00":
 
     x      -> stepper X, rotation of the base, in degrees
-    y      -> stepper Y, tilt of the mirror, in degrees (positive = down)
+    y      -> stepper Y, tilt of the mirror, in degrees: 0 = all the way down (rest), positive = up
     r,g,b  -> LED strip: a solid colour, 0 to 255
     c      -> servo, convexity, -1 (concave) to +1 (convex)
     phase  -> 0 to 1: how far a rainbow around the strip has turned (Processing makes it turn)
@@ -20,8 +20,8 @@
   Nothing in loop() is allowed to wait, because each call to run() makes at most
   one step: if the loop stops, the motors stop.
 
-  BEFORE POWERING ON: put the mirror at rest by hand. The startup position of each
-  stepper counts as 0. The servo goes straight to "flat".
+  BEFORE POWERING ON: put the mirror at rest by hand (base centred, head all the way down).
+  The startup position of each stepper counts as 0. The servo goes straight to "flat".
 */
 
 #include <AccelStepper.h>
@@ -40,7 +40,7 @@ const float STEPS_PER_DEG_Y = 11.38;  // Steps per degree of tilt. TODO CALIBRAT
 
 // --- Safety limits: never past these, whatever arrives. Keep them the same as in mirror.pde ---
 const float X_MIN_DEG = -100, X_MAX_DEG = 100;// Degrees. TODO CALIBRATE
-const float Y_MIN_DEG = -30, Y_MAX_DEG = 30;  // Degrees. TODO CALIBRATE
+const float Y_MIN_DEG = 0, Y_MAX_DEG = 30;    // Degrees. 0 = head at rest, all the way down. Y_MAX_DEG: TODO CALIBRATE
 
 // --- Stepper motion: higher = more reactive, but too high and the motor skips steps ---
 const float MAX_SPEED = 800;   // Steps per second. The 28BYJ-48 reaches at most about 1024. TODO CALIBRATE (docs/calibration.md, step 5)

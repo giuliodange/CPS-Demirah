@@ -17,9 +17,11 @@ Do the steps **in order**: each one relies on the ones before. Every value to me
 
 ## Step 1: Safe range
 
-1. Put the mirror at rest by hand.
+1. Put the mirror at rest by hand: base centred, head all the way down (cord slack).
 2. Type `z`, so that position becomes zero.
 3. Move each axis in small steps up to the furthest safe position, without pulling the cord too far or twisting the cables. Read the position with `p` and note it down.
+   - **X** goes both ways from 0: find a limit on each side.
+   - **Y** goes one way only, from 0 (down) to the highest safe tilt. Positive `y` must lift the head; if it does not, make `STEPS_PER_DEG_Y` negative.
 4. For the servo, find the furthest safe pulse in each direction with `s`.
 
 ## Step 2: Scale (commanded degrees = real degrees)
@@ -28,13 +30,14 @@ Do the steps **in order**: each one relies on the ones before. Every value to me
 |---|---|
 | `STEPS_PER_DEG_X` | Mark the base with tape, type `x 1000` and measure the angle it turns. Then 1000 ÷ angle |
 | `STEPS_PER_DEG_Y` | Type `y 300` and measure the tilt change with a phone inclinometer. Then 300 ÷ angle |
-| `X_MIN_DEG`, `X_MAX_DEG`, `Y_MIN_DEG`, `Y_MAX_DEG` | Positions from step 1 ÷ `STEPS_PER_DEG`. Use **the same values in `mirror.pde`** |
+| `X_MIN_DEG`, `X_MAX_DEG`, `Y_MAX_DEG` | Positions from step 1 ÷ `STEPS_PER_DEG`. Use **the same values in `mirror.pde`**. `Y_MIN_DEG` stays 0 |
+| `Y_LEVEL_DEG` (`mirror.pde`) | The tilt, from 0, where the mirror looks straight ahead (inclinometer at 0°). Idle rests here |
 
 **Check:** upload `mirror.ino`, then send `30,0,0,0,0,0,0,0` from the Serial Monitor. The base must turn 30°. Then send `0,0,0,0,0,0,0,0`: it must return to the tape mark. If it doesn't, it is losing steps, so lower `MAX_SPEED` and `ACCEL`.
 
 ## Step 3: Directions
 
-1. **Motor matches the twin.** Run `mirror.pde` with `INPUT = "mouse"` and `SIMULATION_ONLY = false`. If a real axis moves opposite to the twin, make its `STEPS_PER_DEG` negative. Positive tilt means looking down.
+1. **Motor matches the twin.** Run `mirror.pde` with `INPUT = "mouse"` and `SIMULATION_ONLY = false`. If a real axis moves opposite to the twin, make its `STEPS_PER_DEG` negative. Tilt 0 is all the way down, positive tilt is up.
 2. **The loop corrects towards you.** Set `INPUT = "mirror camera"` and stand to one side. If the mirror turns away and runs to a limit, flip `INVERT_X`. Check `INVERT_Y` the same way, standing higher, then lower.
 
 ## Step 4: Camera field of view
