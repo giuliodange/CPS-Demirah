@@ -19,23 +19,21 @@
 
 #include <AccelStepper.h>
 #include <Adafruit_NeoPixel.h>
-#include <Servo.h>
 
 // ============================== CONFIG ==============================
 const int PIN_X_IN1 = 2, PIN_X_IN2 = 3, PIN_X_IN3 = 4, PIN_X_IN4 = 5;   // Stepper X driver: rotation
 const int PIN_Y_IN1 = 7, PIN_Y_IN2 = 8, PIN_Y_IN3 = 11, PIN_Y_IN4 = 12; // Stepper Y driver: tilt
-const int PIN_SERVO = 9;           // Servo signal: convexity
+const int PIN_SERVO = 9;           // Servo signal: convexity. Must stay D9 (see servoBegin())
 const int PIN_LEDS = 6;            // LED strip data
 const float TEST_SPEED = 300;      // Steps per second. Slow on purpose.
 const float TEST_ACCEL = 300;      // Steps per second, per second.
-const int NUM_LEDS = 2;            // Number of LEDs. Set it to your strip.
+const int NUM_LEDS = 75;            // Number of LEDs. Set it to your strip.
 const int MAX_BRIGHTNESS = 60;     // 0 to 255. Keeps the LEDs inside the power budget.
 // ====================================================================
 
 // IN1, IN3, IN2, IN4 is the coil order the 28BYJ-48 needs.
 AccelStepper stepperX(AccelStepper::HALF4WIRE, PIN_X_IN1, PIN_X_IN3, PIN_X_IN2, PIN_X_IN4);
 AccelStepper stepperY(AccelStepper::HALF4WIRE, PIN_Y_IN1, PIN_Y_IN3, PIN_Y_IN2, PIN_Y_IN4);
-Servo convexityServo;
 Adafruit_NeoPixel strip(NUM_LEDS, PIN_LEDS, NEO_GRB + NEO_KHZ800);
 
 void setup() {
@@ -44,8 +42,7 @@ void setup() {
   stepperX.setAcceleration(TEST_ACCEL);
   stepperY.setMaxSpeed(TEST_SPEED);
   stepperY.setAcceleration(TEST_ACCEL);
-  convexityServo.attach(PIN_SERVO);
-  convexityServo.writeMicroseconds(1500);
+  servoBegin(1500);
   strip.begin();
   strip.setBrightness(MAX_BRIGHTNESS);
   strip.show();
@@ -67,7 +64,7 @@ void loop() {
       stepperY.setCurrentPosition(0);
     } else if (command == 's') {
       int pulseUs = Serial.parseInt();
-      convexityServo.writeMicroseconds(pulseUs);
+      servoWrite(pulseUs);
       Serial.print("Servo: ");
       Serial.print(pulseUs);
       Serial.println(" us");
@@ -93,4 +90,17 @@ void loop() {
 
   stepperX.run();
   stepperY.run();
+}
+
+// The same servo pulse as mirror.ino (see the comment there), so calibrated values carry over:
+// the timer TCA0 makes it in hardware on D9, one pulse every 20 ms, 4 microseconds per tick.
+void servoBegin(int pulseUs) {
+  pinMode(PIN_SERVO, OUTPUT);
+  TCA0.SINGLE.PER = 5000 - 1;
+  servoWrite(pulseUs);
+  TCA0.SINGLE.CTRLB |= TCA_SINGLE_CMP0EN_bm;
+}
+
+void servoWrite(int pulseUs) {
+  TCA0.SINGLE.CMP0BUF = pulseUs / 4;
 }

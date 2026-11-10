@@ -15,7 +15,7 @@
     1. Collect characters until a whole line has arrived: readSerial().
     2. Turn the values into targets: handleLine().  <-- the important part
     3. Move the steppers towards their targets: run(), in loop().
-       The servo needs nothing in loop(): the Servo library keeps it in place by itself.
+       The servo needs nothing in loop(): a hardware timer repeats its pulse by itself.
 
   Nothing in loop() is allowed to wait, because each call to run() makes at most
   one step: if the loop stops, the motors stop.
@@ -26,13 +26,12 @@
 
 #include <AccelStepper.h>
 #include <Adafruit_NeoPixel.h>
-#include <Servo.h>
 
 // ============================== CONFIG ==============================
 // --- Pins ---
 const int PIN_X_IN1 = 2, PIN_X_IN2 = 3, PIN_X_IN3 = 4, PIN_X_IN4 = 5;  // Stepper X driver: rotation
 const int PIN_Y_IN1 = 7, PIN_Y_IN2 = 8, PIN_Y_IN3 = 11, PIN_Y_IN4 = 12; // Stepper Y driver: tilt
-const int PIN_SERVO = 9;                                                // Servo signal (orange wire): convexity
+const int PIN_SERVO = 9;                                                // Servo signal (orange wire): convexity. Must stay D9 (see servoBegin())
 const int PIN_LEDS = 6;                                                 // LED strip data, through a 330 ohm resistor
 
 // --- Degrees to steps. The motor alone needs 4096 half-steps per turn: 4096 / 360 = 11.38 ---
@@ -65,7 +64,6 @@ const int LED_CHANGE_MIN = 3;    // A solid colour is redrawn only when a channe
 // IN1, IN3, IN2, IN4 is not a typo: it is the coil order these 4-wire unipolar steppers need.
 AccelStepper stepperX(AccelStepper::HALF4WIRE, PIN_X_IN1, PIN_X_IN3, PIN_X_IN2, PIN_X_IN4);
 AccelStepper stepperY(AccelStepper::HALF4WIRE, PIN_Y_IN1, PIN_Y_IN3, PIN_Y_IN2, PIN_Y_IN4);
-Servo convexityServo;
 Adafruit_NeoPixel strip(NUM_LEDS, PIN_LEDS, NEO_GRB + NEO_KHZ800);  // WS2812 read colours as green, red, blue.
 
 char line[48];       // The line being received.
@@ -85,8 +83,7 @@ void setup() {
   stepperY.setMaxSpeed(MAX_SPEED);
   stepperY.setAcceleration(ACCEL);
 
-  convexityServo.attach(PIN_SERVO);
-  convexityServo.writeMicroseconds(servoUs);
+  servoBegin(servoUs);
 
   strip.begin();
   strip.setBrightness(MAX_BRIGHTNESS);
@@ -137,7 +134,7 @@ void handleLine() {
   int newServoUs = SERVO_FLAT_US + constrain(values[5], -1, 1) * SERVO_RANGE_US;
   if (abs(newServoUs - servoUs) >= SERVO_DEAD_BAND_US) {
     servoUs = newServoUs;
-    convexityServo.writeMicroseconds(servoUs);
+    servoWrite(servoUs);
   }
 
   // LEDs. Drawing them here, right after a line, is on purpose: strip.show() switches interrupts
@@ -151,8 +148,7 @@ void handleLine() {
   }
 }
 
-// One solid colour on every LED. strip.show() can also stretch a servo pulse and make the servo
-// twitch, so it is called only when the colour has really changed.
+// One solid colour on every LED. It is redrawn only when the colour has really changed.
 void showSolid(int red, int green, int blue) {
   if (abs(red - ledRed) < LED_CHANGE_MIN && abs(green - ledGreen) < LED_CHANGE_MIN && abs(blue - ledBlue) < LED_CHANGE_MIN) {
     return;
@@ -210,4 +206,24 @@ void manageCoils(AccelStepper& motor, bool& coilsOn, unsigned long& lastMove) {
     motor.disableOutputs();
     coilsOn = false;
   }
+}
+
+// The servo pulse is made in hardware by the timer TCA0, not by the Servo library.
+// The Servo library ends each pulse with an interrupt. strip.show() switches interrupts off for
+// about 2 ms, so some pulses came out longer and the servo twitched during the idle rainbow.
+// TCA0 drives D9 by itself, so the pulse stays exact whatever the code is doing.
+// TCA0 already counts one tick every 4 microseconds (16 MHz / 64), and millis() relies on that,
+// so only the period changes: 5000 ticks = 20 ms, one pulse every 20 ms as servos expect.
+// Side effect: analogWrite() on D5 and D10 would also run at 50 Hz. This sketch does not use it.
+void servoBegin(int pulseUs) {
+  pinMode(PIN_SERVO, OUTPUT);
+  TCA0.SINGLE.PER = 5000 - 1;                 // Counts 0..4999, then starts the next pulse.
+  servoWrite(pulseUs);
+  TCA0.SINGLE.CTRLB |= TCA_SINGLE_CMP0EN_bm;  // Connect the timer to D9 (pin PB0 of the chip).
+}
+
+// The output stays high until the count reaches pulseUs / 4. The new length starts with the
+// next pulse (the "BUF" register), never halfway through one.
+void servoWrite(int pulseUs) {
+  TCA0.SINGLE.CMP0BUF = pulseUs / 4;
 }

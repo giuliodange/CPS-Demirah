@@ -59,7 +59,7 @@ The course example passed one Wekinator class from Processing to the Arduino. On
 ## Third-party code
 
 - **ESP32-CAM:** Espressif's `CameraWebServer` example. The only changes are the camera model (`AI_THINKER`) and the Wi-Fi credentials, which are moved to `secrets.h`.
-- **Libraries:** MediaPipe Face Landmarker model (`face_landmarker.task`), oscP5, AccelStepper, Adafruit NeoPixel and Servo.
+- **Libraries:** MediaPipe Face Landmarker model (`face_landmarker.task`), oscP5, AccelStepper and Adafruit NeoPixel. The servo pulse is made by the Arduino's timer TCA0, not the Servo library: `strip.show()` switches interrupts off for about 2 ms, which stretched pulses from the Servo library and made the servo twitch during the idle rainbow.
 
 ## Settings
 

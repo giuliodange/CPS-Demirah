@@ -35,7 +35,7 @@ import processing.serial.*;
 
 // ============================== CONFIG ==============================
 // --- Modes ---
-final boolean SIMULATION_ONLY = true; // true = no serial port, everything happens on screen.
+final boolean SIMULATION_ONLY = false; // true = no serial port, everything happens on screen.
 final String INPUT = "laptop camera";  // Where the faces come from:
                                        //   "mirror camera" = the ESP32-CAM on the mirror (start "Avvia camera specchio")
                                        //   "laptop camera" = the computer's camera, for testing (start "Avvia webcam computer")
@@ -93,7 +93,7 @@ final float CONVEXITY_SMOOTHING = 0.03; // 0 to 1. Lower = slower and calmer cha
 
 // --- Connections ---
 final int OSC_PORT = 12000;            // UDP port to listen on. Must match PROCESSING_PORT in face_tracker.py.
-final String SERIAL_PORT_NAME = "/dev/cu.usbmodem21101";  // The Arduino's port, from the list printed in the console.
+final String SERIAL_PORT_NAME = "/dev/cu.usbmodem1101";  // The Arduino's port, from the list printed in the console.
 final int SEND_RATE_HZ = 30;           // Maximum messages per second to the Arduino.
 // ====================================================================
 

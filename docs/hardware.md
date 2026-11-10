@@ -4,7 +4,7 @@
 
 | Component | Task | Why we chose it |
 |---|---|---|
-| Arduino Nano Every | Receives one line of text from Processing and drives the motors, servo and LEDs | Small, 5 V logic, enough pins and memory, and supported by AccelStepper, Servo and NeoPixel |
+| Arduino Nano Every | Receives one line of text from Processing and drives the motors, servo and LEDs | Small, 5 V logic, enough pins and memory, and supported by AccelStepper and NeoPixel. Its timer TCA0 makes the servo pulse in hardware on D9 |
 | Stepper X, 12 V (TODO: model) + Seeed ULN2003 driver | Rotates the body | Open-loop position control with no encoder. It holds its position when stopped |
 | Stepper Y, 28BYJ-48 5 V + Seeed ULN2003 driver | Pulls the tilt cord | Cheap and geared. Its gearbox holds the head when the coils are off |
 | Servo SG90 | Pushes the rack: concavity | Small and light enough to sit in the head. It holds a position from a single signal |

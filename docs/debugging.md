@@ -77,5 +77,5 @@ ESP32-CAM -> Python + MediaPipe -> Wekinator -> Processing -> Arduino -> motors,
 | The motor buzzes | The `IN` wires are in the wrong order, or the speed is too high |
 | The base doesn't return to its mark | It is losing steps: lower `MAX_SPEED` and `ACCEL` |
 | The servo trembles | Test it without the mirror. If it is still, it is the load. If it still trembles, it is the 5 V supply |
-| The servo twitches when the LEDs change | `strip.show()` briefly stops interrupts. Expected occasionally in idle (the rainbow) |
+| The servo twitches when the LEDs change | Should not happen: the servo pulse is made by the timer TCA0 in hardware, so `strip.show()` cannot stretch it. Check that `servoBegin()` is called and the signal is on D9 |
 | The LEDs are dark | The data wire must go to `Din`, not `DO`. Check the 330 Ω resistor and the shared GND |
