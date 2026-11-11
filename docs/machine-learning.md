@@ -2,53 +2,51 @@
 
 ## Task
 
-Classify the expression of the closest face into **5 classes**. Each one changes the colour of the LEDs and the shape of the mirror:
+Classify the expression of the closest face into **4 classes**. Each one changes the LEDs and the shape of the mirror:
 
 | Class | Expression | Mirror's response |
 |---|---|---|
 | 1 | neutral | White LEDs, flat surface |
 | 2 | happy | Yellow LEDs, the surface goes concave |
 | 3 | wink | Green LEDs, one quick push of the surface |
-| 4 | angry | Red LEDs, the surface shakes |
-| 5 | blow | Blue LEDs, the surface slowly pushes out to convex, as if the person inflated it by blowing |
+| 4 | amazed | Rainbow LEDs, the surface pulses fast |
 
-The classes were chosen to be easy to tell apart: each one moves a different part of the face (mouth corners, one eye, brows and nose, lips).
+The classes were chosen to be easy to tell apart: each one moves a different part of the face. An earlier set included sad and angry, but a light frown was too close to a neutral face.
 
 ## Inputs
 
-The model does not see the image. MediaPipe Face Landmarker first turns each frame into 52 **blendshapes**: scores from 0 to 1 for individual face movements. From these we send 15 to Wekinator, chosen because they separate the 5 classes:
+The model does not see the image. MediaPipe Face Landmarker first turns each frame into 52 **blendshapes**: scores from 0 to 1 for individual face movements. From these we send 15 to Wekinator:
 
-| Scores | Main class |
+| Scores | What they show |
 |---|---|
-| `mouthSmileLeft`, `mouthSmileRight` | happy |
-| `eyeBlinkLeft`, `eyeBlinkRight`, `eyeSquintLeft`, `eyeSquintRight` | wink (one eye closed, the other open) |
-| `browDownLeft`, `browDownRight`, `noseSneerLeft`, `noseSneerRight`, `mouthPressLeft`, `mouthPressRight` | angry |
-| `mouthPucker`, `mouthFunnel`, `cheekPuff` | blow (lips pushed forward into a small O) |
+| `mouthSmileLeft`, `mouthSmileRight` | A smile: happy |
+| `eyeBlinkLeft`, `eyeBlinkRight`, `eyeSquintLeft`, `eyeSquintRight` | One eye closed and the other open: wink |
+| `browInnerUp` | Raised eyebrows: amazed |
+| `mouthFrownLeft`, `mouthFrownRight`, `mouthPressLeft`, `mouthPressRight`, `browDownLeft`, `browDownRight`, `noseSneerLeft`, `noseSneerRight` | Other movements of the mouth, brows and nose. They help separate neutral from the rest |
 
-Neutral is the absence of all of them. The order is fixed in `BLENDSHAPES_TO_SEND` in `face_tracker.py`, because Wekinator knows its inputs only by position.
+The order is fixed in `BLENDSHAPES_TO_SEND` in `face_tracker.py`, because Wekinator knows its inputs only by position.
 
 ## Training data
 
-**TODO: record the new dataset.** The classes above replaced an earlier set (neutral, happy, sad, angry, wink). Sad was dropped because a light frown was too close to a neutral face. There are still 15 inputs, but three of them changed: the lip scores for blow replaced the sad ones. So the examples must be recorded again before the mirror reacts to expressions.
-
-How to create it:
-
-1. In Wekinator, open the existing project [`wekinator/5emotions`](../wekinator/5emotions) (15 inputs, 1 classifier output with 5 classes) and **delete all its examples**: they belong to the old classes and inputs. Or create a new project with the same settings: 15 inputs on port 6448 (message `/wek/inputs`), output to port 12000 (message `/wek/outputs`).
-2. Start `face_tracker.py`. For each class, select it in Wekinator and record a few seconds while holding the expression, moving the head and changing distance.
-3. For neutral, record natural variation too: blinking, talking a little, small head turns.
-4. For the wink, record both eyes.
-5. Repeat with **at least 3 people**, in more than one lighting.
-6. Train, then save the project.
+File: [`wekinator/5emotions/current/currentData.arff`](../wekinator/5emotions/current/currentData.arff)
 
 | Property | Value |
 |---|---|
-| Examples | TODO |
+| Examples | 5020 (one per camera frame while recording) |
 | Inputs per example | 15 |
-| Recorded | TODO |
-| People | TODO (at least 3) |
-| Examples per class | TODO |
+| Recorded | 11 November 2026 |
+| People | TODO |
 
-**Earlier dataset:** until it is recorded again, [`wekinator/5emotions`](../wekinator/5emotions) still holds the first model: 1768 examples recorded by 1 person on 8 November 2026 (neutral 378, happy 350, sad 361, angry 241, wink 438). It does not match the current classes and inputs.
+| Class | Examples |
+|---|---|
+| 1 neutral | 961 |
+| 2 happy | 1048 |
+| 3 wink | 1328 |
+| 4 amazed | 1683 |
+
+The Wekinator project is set up as a classifier with 5 classes, and uses the first 4.
+
+**How the data was recorded:** for each class we held the expression for a few seconds while moving the head and changing distance, so the model sees the same expression from different angles.
 
 ## Model and why
 
@@ -59,7 +57,7 @@ The model is **k-nearest neighbours with k = 1**: Wekinator's default classifier
 | Few examples needed | Blendshapes already describe expressions, so nearby points in the 15 dimensions are similar faces |
 | Distinct classes | A classifier gives one clear emotion. A continuous output would blend them, for example half angry and half happy, which has no meaning here |
 | Instant retraining | k-NN only stores the examples, so we can add a new person and retrain in seconds |
-| Fast enough | A few thousand examples by 15 inputs is a trivial search at 30 frames per second |
+| Fast enough | About 5000 examples by 15 inputs is a trivial search at 30 frames per second |
 
 **Known limits:** with k = 1 the model copies its single nearest example, so it is sensitive to noise and to the people it was trained on. We reduce flicker in Processing: an emotion must hold for 0.3 s before it shows.
 
@@ -69,7 +67,8 @@ The model is **k-nearest neighbours with k = 1**: Wekinator's default classifier
 |---|---|
 | More people (3 or more planned) | Cover different faces, glasses and lighting. This is the biggest gain for k-NN |
 | More data per class | Raise k to 3-5, so each decision is a vote and less sensitive to noise |
-| Balanced classes | Record a similar number of examples for every class, so none is favoured |
+| Balanced classes | Record a similar number of examples for every class: amazed has almost twice as many as neutral |
+| Better inputs for amazed | Add `jawOpen`, `eyeWideLeft` and `eyeWideRight`, which describe an open mouth and wide eyes directly, then record again |
 | Other models in Wekinator | Try AdaBoost or SVM, which learn the boundaries between classes instead of memorising points |
 | Large datasets (thousands of people) | Train a small neural network on all 52 blendshapes or on the face landmarks, or a CNN on images, to work with strangers without retraining |
 | Time | Use a short sequence of frames instead of one, so a wink is told apart from a blink |

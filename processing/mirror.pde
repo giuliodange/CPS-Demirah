@@ -13,8 +13,7 @@
                 neutral   white, flat
                 happy     yellow, concave
                 wink      green, one quick push
-                angry     red, the surface shakes
-                blow      blue, slowly pushes out to convex (the person blows at the mirror)
+                amazed    rainbow, a fast pulse
        | no face for NO_FACE_TIMEOUT_S
     sad       it slowly looks down, the LEDs turn SAD_COLOR and fade to dark, then back to idle
               (if a face comes back while sad, it celebrates again)
@@ -39,8 +38,8 @@ final String INPUT = "mirror camera";   // Where the faces come from:
                                         //   "mirror camera" = the ESP32-CAM on the mirror (start "Avvia camera specchio")
                                         //   "laptop camera" = the computer's camera, for testing (start "Avvia webcam computer")
                                         //   "mouse"         = no camera. Mouse = face, p = present,
-                                        //                     1-5 = emotion (neutral, happy, wink, angry, blow)
-final String SERIAL_PORT_NAME = "/dev/cu.usbmodem1101";  // The Arduino's port, from the list printed in the console.
+                                        //                     1-4 = emotion (neutral, happy, wink, amazed)
+final String SERIAL_PORT_NAME = "/dev/cu.usbmodem11101";  // The Arduino's port, from the list printed in the console.
 
 // ================= 2. CALIBRATE: measured on the real mirror (docs/calibration.md) =================
 // Copied from mirror.ino. When Processing connects, the Arduino prints its own values in the
@@ -77,9 +76,7 @@ final float EMOTION_HOLD_S = 0.3;       // Seconds Wekinator must say the same e
 // --- Lights ---
 final color NEUTRAL_COLOR = #FFFFFF;    // Emotion "neutral": white.
 final color HAPPY_COLOR = #FFD000;      // Emotion "happy", and when greeting: yellow.
-final color WINK_COLOR = #00FF40;       // Emotion "wink": green.
-final color ANGRY_COLOR = #FF0000;      // Emotion "angry": red.
-final color BLOW_COLOR = #2040FF;       // Emotion "blow": blue.
+final color WINK_COLOR = #00FF40;       // Emotion "wink": green. ("amazed" has no colour: it shows the rainbow.)
 final color SAD_COLOR = #2040FF;        // The sad state, when the person has left: blue, fading to dark.
 final float LIGHT_SMOOTHING = 0.03;     // 0 to 1. Lower = slower fades between colours, and to and from the rainbow.
 final float RAINBOW_TURNS_PER_S = 0.2;  // How fast the idle rainbow turns around the ring.
@@ -90,12 +87,10 @@ final float PULSE_AMOUNT = 0.6;         // 0 to 1. How far the idle pulse goes, 
 final float HAPPY_CONVEXITY = -0.8;     // Happy: how concave it goes.
 final float WINK_PUSH = 0.6;            // Wink: how far the quick push goes out.
 final float WINK_PUSH_S = 0.35;         // Wink: seconds the push lasts before it comes back.
-final float ANGRY_SHAKE = 0.3;          // Angry: how far the surface shakes, each way.
-final float ANGRY_SHAKE_HZ = 4;         // Angry: shakes per second.
-final float BLOW_CONVEXITY = 1;         // Blow: how convex it ends up.
+final float AMAZED_PULSE = 0.5;         // Amazed: how far the fast pulse goes, both convex and concave.
+final float AMAZED_PULSE_HZ = 2;        // Amazed: pulses per second.
 final float CONVEXITY_SMOOTHING = 0.04; // 0 to 1. Share of the remaining change covered each frame: lower = slower.
-final float CONVEXITY_FAST = 0.4;       // The same, for the wink push and the angry shake.
-final float CONVEXITY_SLOW = 0.008;     // The same, for the slow push of "blow".
+final float CONVEXITY_FAST = 0.4;       // The same, for the wink push and the amazed pulse.
 
 final int OSC_PORT = 12000;             // UDP port to listen on. Must match PROCESSING_PORT in face_tracker.py.
 // ====================================================================
@@ -111,8 +106,8 @@ float faceX = 0.5, faceY = 0.5;            // The face's centre in the camera im
 float size = 0.2;                          // Its width in the image: bigger = closer. Only shown on screen.
 int lastFaceMs = -100000;                  // When we last saw it. Long ago, so it starts idle.
 boolean newFace = false;                   // A new camera frame has arrived since the last draw().
-// Wekinator is a classifier with 5 classes, numbered from 1 in this order.
-final String[] EMOTIONS = {"neutral", "happy", "wink", "angry", "blow"};
+// Wekinator is a classifier with 4 classes, numbered from 1 in this order.
+final String[] EMOTIONS = {"neutral", "happy", "wink", "amazed"};
 String heardEmotion = "neutral";           // What Wekinator says right now.
 int heardSinceMs = 0;                      // Since when it has said it.
 
@@ -181,7 +176,7 @@ void oscEvent(OscMessage message) {
     lastFaceMs = millis();
     newFace = true;
   }
-  // Wekinator sends one number: the class, from 1 to 5.
+  // Wekinator sends one number: the class, from 1 to 4.
   if (message.checkAddrPattern("/wek/outputs")) {
     hearEmotion(EMOTIONS[constrain(round(message.get(0).floatValue()) - 1, 0, EMOTIONS.length - 1)]);
   }
@@ -215,7 +210,7 @@ void keyPressed() {
     return;
   }
   if (key == 'p') present = !present;
-  if (key >= '1' && key <= '5') hearEmotion(EMOTIONS[key - '1']);
+  if (key >= '1' && key <= '4') hearEmotion(EMOTIONS[key - '1']);
 }
 
 void hearEmotion(String newEmotion) {
@@ -343,6 +338,8 @@ void updateLights() {
     wanted = HAPPY_COLOR;
   } else if (state.equals("sad")) {
     wanted = lerpColor(SAD_COLOR, color(0), min(secondsInState() / SAD_S, 1));  // Blue, slowly fading to dark.
+  } else if (emotion.equals("amazed")) {
+    wantedMix = 1;  // Amazed: the rainbow, as in idle.
   } else {
     wanted = emotionColor();
   }
@@ -357,8 +354,6 @@ void updateLights() {
 color emotionColor() {
   if (emotion.equals("happy")) return HAPPY_COLOR;
   if (emotion.equals("wink")) return WINK_COLOR;
-  if (emotion.equals("angry")) return ANGRY_COLOR;
-  if (emotion.equals("blow")) return BLOW_COLOR;
   return NEUTRAL_COLOR;
 }
 
@@ -384,12 +379,9 @@ void updateConvexity() {
     // One quick push out, then back to flat. It happens once, when the wink begins.
     wantedConvexity = secondsOfEmotion < WINK_PUSH_S ? WINK_PUSH : 0;
     smoothing = CONVEXITY_FAST;
-  } else if (emotion.equals("angry")) {
-    wantedConvexity = ANGRY_SHAKE * sin(TWO_PI * ANGRY_SHAKE_HZ * secondsOfEmotion);
+  } else if (emotion.equals("amazed")) {
+    wantedConvexity = AMAZED_PULSE * sin(TWO_PI * AMAZED_PULSE_HZ * secondsOfEmotion);
     smoothing = CONVEXITY_FAST;
-  } else if (emotion.equals("blow")) {
-    wantedConvexity = BLOW_CONVEXITY;
-    smoothing = CONVEXITY_SLOW;
   } else {
     wantedConvexity = 0;  // Neutral: flat.
   }

@@ -85,7 +85,7 @@ Change one value at a time.
 | `SERVO_RANGE_US` (`mirror.ino`) | Pulse for the deepest curve minus the flat pulse, without the sign. Make it negative if the curve goes the wrong way |
 | `MAX_SAG_MM` (`mirror.pde`) | Depth of the deepest curve, in mm |
 
-Then tune the gestures in `mirror.pde`, with `INPUT = "mouse"` and the keys 1-5: `HAPPY_CONVEXITY`, `WINK_PUSH`, `ANGRY_SHAKE` and `BLOW_CONVEXITY` set how far each one goes (-1 to +1). If the rack can only push, keep the concave values small.
+Then tune the gestures in `mirror.pde`, with `INPUT = "mouse"` and the keys 1-4: `HAPPY_CONVEXITY`, `WINK_PUSH` and `AMAZED_PULSE` set how far each one goes (-1 to +1). If the rack can only push, keep the concave values small.
 
 ## Step 7: LEDs and power
 

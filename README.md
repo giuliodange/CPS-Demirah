@@ -3,7 +3,7 @@
 **Cyber Physical Systems, IDE (Imperial College London / Royal College of Art)**
 Ruoxin Chen, Indiana Gothard, Giulio d'Angelantonio
 
-Demirah is a round mirror that turns to face you, reads your expression and reacts. It greets you with a happy circle, follows your face, and answers your expression with the colour of its 75 LEDs and the shape of its surface: it goes concave when you smile, shakes when you frown, and swells when you blow at it. When you leave, it looks down sadly before going back to rest.
+Demirah is a round mirror that turns to face you, reads your expression and reacts. It greets you with a happy circle, follows your face, and answers your expression with the colour of its 75 LEDs and the shape of its surface: it goes concave when you smile, gives a quick push when you wink, and pulses in rainbow colours when you look amazed. When you leave, it looks down sadly before going back to rest.
 
 | The built model (mirror and LEDs not yet fitted) | Digital twin: idle | Digital twin: tracking |
 |---|---|---|
@@ -16,7 +16,7 @@ Demirah is a round mirror that turns to face you, reads your expression and reac
 ```
 ESP32-CAM on the mirror ~~Wi-Fi~~> face_tracker.py (MediaPipe)
                                      |- OSC /face --------------------------------> Processing
-                                     '- OSC /wek/inputs -> Wekinator (5 classes) -> Processing
+                                     '- OSC /wek/inputs -> Wekinator (4 classes) -> Processing
 Processing (behaviour + digital twin) -- USB serial --> Arduino Nano Every
                                                         -> stepper X (rotation), stepper Y (tilt),
                                                            servo (concavity), 75 LEDs
@@ -38,8 +38,7 @@ Expressions, recognised by Wekinator:
 | neutral | White | Flat |
 | happy | Yellow | Goes concave |
 | wink | Green | One quick push |
-| angry | Red | Shakes |
-| blow | Blue | Slowly pushes out to convex |
+| amazed | Rainbow | Pulses fast |
 
 ## Documentation
 
@@ -58,7 +57,7 @@ Expressions, recognised by Wekinator:
 | Folder | Contents |
 |---|---|
 | [`python/`](python) | `face_tracker.py`: camera, MediaPipe, OSC |
-| [`wekinator/`](wekinator) | The trained 5-class project and its training data |
+| [`wekinator/`](wekinator) | The trained Wekinator project and its training data |
 | [`processing/`](processing) | `mirror.pde` (behaviour) and `twin.pde` (digital twin) |
 | [`arduino/mirror/`](arduino/mirror) | `mirror.ino`: motors, servo and LEDs |
 | [`esp32_cam/`](esp32_cam) | The ESP32-CAM streaming sketch |
@@ -75,7 +74,7 @@ Expressions, recognised by Wekinator:
 2. **Upload:** put `arduino/mirror/mirror.ino` on the Arduino Nano Every. For the camera, copy `esp32_cam/CameraWebServer/secrets.example.h` to `secrets.h`, fill in the Wi-Fi details, then upload the sketch to the ESP32-CAM.
 3. **Start, in this order:**
    1. The power board.
-   2. Wekinator: open `wekinator/5emotions/5emotions.wekproj` and click **Run** (it must be retrained first: see [machine-learning.md](docs/machine-learning.md)).
+   2. Wekinator: open `wekinator/5emotions/5emotions.wekproj` and click **Run**.
    3. `processing/mirror.pde`.
    4. The tracker:
       ```bash
