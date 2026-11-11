@@ -18,7 +18,7 @@ ESP32-CAM -> Python + MediaPipe -> Wekinator -> Processing -> Arduino -> motors,
 
 ## 2. Does Python see the face?
 
-**Check:** run `.venv/bin/python python/face_tracker.py`. The preview should show green dots on your face and `faces=1`.
+**Check:** run `.venv/bin/python python/face_tracker.py`. The preview should show green dots on your face and its `cx`, `cy` and `size`.
 
 | If not | Fix |
 |---|---|

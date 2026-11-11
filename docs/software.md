@@ -5,7 +5,7 @@
 | Step | Program | Input | Output |
 |---|---|---|---|
 | 1. Camera | ESP32-CAM, [`esp32_cam/CameraWebServer`](../esp32_cam/CameraWebServer) | Image | MJPEG stream over Wi-Fi: `http://<ip>:81/stream` |
-| 2. Perception | [`python/face_tracker.py`](../python/face_tracker.py) with MediaPipe Face Landmarker | Stream | OSC `/face` and `/face2`: `present, cx, cy, size` of the two largest faces. OSC `/wek/inputs`: 15 expression scores of the largest face |
+| 2. Perception | [`python/face_tracker.py`](../python/face_tracker.py) with MediaPipe Face Landmarker | Stream | OSC `/face`: `present, cx, cy, size` of the largest (closest) face. OSC `/wek/inputs`: 15 expression scores of that face |
 | 3. Classification | Wekinator, [`wekinator/5emotions`](../wekinator/5emotions) | 15 scores | OSC `/wek/outputs`: class 1-5 |
 | 4. Behaviour | Processing, [`processing/mirror.pde`](../processing/mirror.pde) | Faces and emotion | One serial line, 30 times per second |
 | 5. Actuation | Arduino, [`arduino/mirror/mirror.ino`](../arduino/mirror/mirror.ino) | Serial line | Steppers, servo, LEDs |
@@ -37,7 +37,8 @@ To change the experience you edit only Processing, and nothing needs re-uploadin
 ## Key algorithms (in `mirror.pde`)
 
 - **Closed-loop tracking.** The camera turns with the mirror, so the face's offset from the image centre is the pointing error. At each new camera frame, the target becomes the current angle plus `CLOSED_LOOP_GAIN` × the error. The mirror stops by itself when the face is centred. Each frame is used only once, because the Wi-Fi image arrives late.
-- **State machine.** idle, greeting, tracking, shy and sad (see the diagram at the top of `mirror.pde`). Every colour, rainbow and shape change is smoothed, so changing state never jumps.
+- **Centre box.** While the face stays inside a box in the middle of the image (`CENTRE_BOX_W` × `CENTRE_BOX_H`), the mirror does not move. When the face leaves the box, the mirror re-centres it to within `DEAD_ZONE_DEG`, then rests again. This keeps the mirror still while a person shifts a little, and the twin shows the box and the face in a small camera view.
+- **State machine.** idle, greeting, tracking and sad (see the diagram at the top of `mirror.pde`). Every colour, rainbow and shape change is smoothed, so changing state never jumps.
 - **Zoom-keeping convexity.** Distance is estimated as `k / face size`. A concave mirror magnifies by `f / (f − d)`, so to keep the zoom constant the focal length must be `f = zoom · d / (zoom − 1)`. The curve depth then follows from the sphere of radius `2f`.
 - **Emotion hold.** An emotion counts only after Wekinator has repeated it for 0.3 s, so a one-frame mistake does not flash the LEDs.
 - **Digital twin** (`twin.pde`). A 3D view of the mirror drawn from the same values that are sent to the Arduino, plus a text panel showing every stage of the pipeline.
@@ -48,8 +49,8 @@ The course example passed one Wekinator class from Processing to the Arduino. On
 
 | Part | Addition |
 |---|---|
-| Perception | A MediaPipe tracker that finds two faces and sends 15 blendshape scores, and a preview that scales to the frame size. The ESP32-CAM is mounted upside down, so its image is turned 180° first (`ROTATE_MIRROR_CAMERA`) |
-| Two people | The shy state sweeps between the two remembered faces on a cosine curve (`SHY_SWEEP_S`), with slow smoothing, so it lingers on each person and never jumps |
+| Perception | A MediaPipe tracker that picks the closest face and sends 15 blendshape scores, and a preview that scales to the frame size. The ESP32-CAM is mounted upside down, so its image is turned 180° first (`ROTATE_MIRROR_CAMERA`) |
+| Calm tracking | A centre box in the image: the mirror rests while the face stays inside it |
 | Machine learning | A 5-class classifier trained on facial blendshapes instead of mouse position |
 | Behaviour | The closed loop, the 5-state machine, optics-based convexity, and smooth fades |
 | Simulation | Three input modes (`mirror camera`, `laptop camera`, `mouse`) to test without hardware |

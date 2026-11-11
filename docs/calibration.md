@@ -73,8 +73,9 @@ Change one value at a time.
    - The first speed where a motor buzzes without moving, or does not come back to its mark, is too fast. Use about 20% less for `MAX_SPEED_X` and `MAX_SPEED_Y`. If it still loses steps at the start of a move, lower `ACCEL_X` or `ACCEL_Y`.
 2. **Copy the speeds to `mirror.pde`:** `X_MAX_DEG_PER_S` = `MAX_SPEED_X` ÷ `STEPS_PER_DEG_X`, and the same for Y. The Arduino prints both. If Processing believes the mirror is faster than it is, the tracking overshoots.
 3. **`CLOSED_LOOP_GAIN`** (`mirror.pde`): start at 0.35. Take a quick step sideways. If the mirror overshoots and swings back, lower it by 0.1. If it follows lazily, raise it by 0.1.
-4. **`DEAD_ZONE_DEG`:** stand still. If the mirror keeps correcting, raise it by 0.5 at a time until it stays still.
-5. **`FAST_SMOOTHING`:** 0.3 is reactive. If the motion is jerky, use 0.2.
+4. **`CENTRE_BOX_W`, `CENTRE_BOX_H`:** the mirror rests while the face is inside this box (shown in the twin's camera view). If it moves too often, make the box bigger. If your face drifts too far off-centre before it reacts, make it smaller.
+5. **`DEAD_ZONE_DEG`:** how close to the centre the mirror brings the face before it rests again. If it hunts around the centre, raise it by 0.5.
+6. **`FAST_SMOOTHING`:** 0.3 is reactive. If the motion is jerky, use 0.2.
 
 ## Step 6: Convexity
 

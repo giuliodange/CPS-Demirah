@@ -224,14 +224,10 @@ void drawLedRing() {
 
 // ---------------------------- Others ----------------------------
 
-// Red balls for the people. Tracking: where the mirror is heading, which sits on the yellow line
-// when the face is centred. Shy: the two remembered people.
+// A red ball where the face is, while tracking. It sits on the yellow line when the face is centred.
 void drawPerson() {
   if (state.equals("tracking")) {
-    drawBall(targetX, targetY);
-  } else if (state.equals("shy")) {
-    drawBall(shyX[0], shyY[0]);
-    drawBall(shyX[1], shyY[1]);
+    drawBall(faceAngleX(cx), faceAngleY(cy));
   }
 }
 
@@ -263,12 +259,29 @@ void drawHud() {
   textSize(15);
   text("STATE     " + state + "   (input: " + INPUT + ")"
     + "\nRECEIVED  face=" + nf(faceX, 0, 2) + "," + nf(faceY, 0, 2) + "  as seen from the mirror=" + nf(cx, 0, 2) + "," + nf(cy, 0, 2) + "  size=" + nf(size, 0, 2)
-      + (millis() - lastFace2Ms < 300 ? "  + second face" : "")
     + "\nANGLES    x=" + nf(angleX, 0, 1) + "  y=" + nf(angleY + nodY, 0, 1)
     + "\nEMOTION   " + emotion + (heardEmotion.equals(emotion) ? "" : "  (hearing " + heardEmotion + ")")
     + "\nLIGHTS    colour=" + round(ledRed) + "," + round(ledGreen) + "," + round(ledBlue) + "  rainbow=" + nf(rainbowMix, 0, 2)
     + "\nCONVEXITY size=" + nf(smoothSize, 0, 3) + "  distance=" + nf(distanceM, 0, 2) + " m  c=" + nf(convexity, 0, 2)
     + "\nSENT      " + lastSentLine.trim()
     + "\nSERIAL    " + (port == null ? "off" : SERIAL_PORT_NAME), 20, 30);
+  drawCameraView(width - 260, 20, 240, 180);
   hint(ENABLE_DEPTH_TEST);
+}
+
+// What the mirror's camera sees, as a small picture: the centre box, and the face as a dot.
+// The dot is green while the mirror rests, and red while it is re-centring the face.
+void drawCameraView(float left, float top, float w, float h) {
+  stroke(40);
+  fill(255);
+  rect(left, top, w, h);
+  noFill();
+  rect(left + w * (0.5 - CENTRE_BOX_W / 2), top + h * (0.5 - CENTRE_BOX_H / 2), w * CENTRE_BOX_W, h * CENTRE_BOX_H);
+  noStroke();
+  if (millis() - lastFaceMs < 300) {
+    fill(following ? color(230, 70, 70) : color(40, 170, 80));
+    ellipse(left + w * cx, top + h * cy, 14, 14);
+  }
+  fill(40);
+  text("camera view and centre box", left, top + h + 18);
 }

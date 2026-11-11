@@ -2,18 +2,17 @@
   mirror: BEHAVIOUR. It decides what the mirror does. Change the experience here:
   the Arduino does not need re-uploading.
 
-  The mirror has 5 states, and moves between them by itself:
+  The mirror has 4 states, and moves between them by itself:
 
     idle      nobody there: it looks straight ahead, the curve pulses, a rainbow turns around the LEDs
        | a face appears
     greeting  a happy celebration: the head draws a circle, the LEDs fade to HAPPY_COLOR
        | the celebration ends
-    tracking  it follows the face (closed loop). The colour shows the emotion from Wekinator:
-              neutral, happy, sad, angry, or a wink (green, and the head nods a little).
+    tracking  it follows the face (closed loop), but rests while the face stays inside the
+              centre box. The colour shows the emotion from Wekinator: neutral, happy, sad,
+              angry, or a wink (green, and the head nods a little).
               The curve keeps the face at the same zoom.
-       | a second face appears (if TWO_PEOPLE)          ^ only one face again
-    shy       embarrassed: it sweeps slowly between the two faces, the curve pulses, the LEDs turn pink
-       | no face for NO_FACE_TIMEOUT_S (from tracking or shy)
+       | no face for NO_FACE_TIMEOUT_S
     sad       it slowly looks down, the LEDs turn SAD_COLOR and fade to dark, then back to idle
               (if a face comes back while sad, it celebrates again)
 
@@ -37,7 +36,7 @@ final String INPUT = "mirror camera";   // Where the faces come from:
                                         //   "mirror camera" = the ESP32-CAM on the mirror (start "Avvia camera specchio")
                                         //   "laptop camera" = the computer's camera, for testing (start "Avvia webcam computer")
                                         //   "mouse"         = no camera. Mouse = face, wheel = size, p = present,
-                                        //                     t = a second person (mirrored), 1-5 = emotion (neutral, happy, sad, angry, wink)
+                                        //                     1-5 = emotion (neutral, happy, sad, angry, wink)
 final String SERIAL_PORT_NAME = "/dev/cu.usbmodem1101";  // The Arduino's port, from the list printed in the console.
 
 // ================= 2. CALIBRATE: measured on the real mirror (docs/calibration.md) =================
@@ -60,17 +59,16 @@ final float MAX_SAG_MM = 30;            // Millimetres. Deepest curve the mirror
 // ================= 3. TUNE: how the mirror behaves =================
 // --- Following a face ---
 final float CLOSED_LOOP_GAIN = 0.35;    // 0 to 1. Share of the way to the face covered at each camera frame. Too high = it overshoots.
-final float DEAD_ZONE_DEG = 2;          // Degrees. A face this close to the centre counts as centred, so the mirror rests.
+final float CENTRE_BOX_W = 0.3;         // 0 to 1. Width of the centre box, as a share of the image. While the face stays
+final float CENTRE_BOX_H = 0.3;         // inside the box, the mirror does not move. Same for the height. Bigger = calmer.
+final float DEAD_ZONE_DEG = 2;          // Degrees. When the face leaves the box, the mirror re-centres it to within this, then rests again.
 final float FAST_SMOOTHING = 0.3;       // 0 to 1. Share of the remaining distance covered each frame, while greeting and tracking.
-final float GENTLE_SMOOTHING = 0.04;    // The same, in the calm states: idle, shy and sad.
+final float GENTLE_SMOOTHING = 0.04;    // The same, in the calm states: idle and sad.
 
 // --- States ---
-final boolean TWO_PEOPLE = true;        // false = ignore a second face: no shy state.
 final float NO_FACE_TIMEOUT_S = 3;      // Seconds without a face before it gets sad.
 final float GREETING_S = 2;             // Seconds the celebration lasts: one happy circle.
 final float GREETING_RADIUS_DEG = 10;   // Degrees. Size of the happy circle.
-final float SHY_SWEEP_S = 7;            // Seconds to sweep from one face to the other and back. Longer = softer.
-final float SHY_EXIT_S = 4;             // Seconds without a second face before it stops being shy.
 final float SAD_S = 2;                  // Seconds it stays sad before going idle. Its blue fades to dark over this time.
 final float WINK_NOD_DEG = 3;           // Degrees. How far the head nods up and down after a wink: very little.
 final float EMOTION_HOLD_S = 0.3;       // Seconds Wekinator must say the same emotion before it shows, so it does not flicker.
@@ -81,13 +79,12 @@ final color HAPPY_COLOR = #FFA000;      // Emotion "happy", and when greeting.
 final color SAD_COLOR = #2040FF;        // Emotion "sad", and when sad.
 final color ANGRY_COLOR = #FF0000;      // Emotion "angry".
 final color WINK_COLOR = #00FF40;       // Emotion "wink".
-final color SHY_COLOR = #FF6FA8;        // Two people: embarrassed pink.
 final float LIGHT_SMOOTHING = 0.03;     // 0 to 1. Lower = slower fades between colours, and to and from the rainbow.
 final float RAINBOW_TURNS_PER_S = 0.2;  // How fast the idle rainbow turns around the ring.
 
 // --- Convexity: tuned to be calm ---
 final float ZOOM = 3;                   // Magnification to keep while tracking, above 1.
-final float PULSE_PERIOD_S = 4;         // Seconds for one in-and-out pulse of the curve (idle and shy).
+final float PULSE_PERIOD_S = 4;         // Seconds for one in-and-out pulse of the curve, in idle.
 final float PULSE_AMOUNT = 0.6;         // 0 to 1. How far the pulse goes, both convex and concave.
 final float SIZE_SMOOTHING = 0.05;      // 0 to 1. Smooths the face size first: it is the noisiest number.
 final float CONVEXITY_DEAD_ZONE = 0.05; // Changes of convexity smaller than this are ignored while tracking.
@@ -101,11 +98,10 @@ final int OSC_PORT = 12000;             // UDP port to listen on. Must match PRO
 final float DEG_PER_IMAGE_X = CAMERA_HFOV_DEG * (INVERT_X ? -1 : 1);
 final float DEG_PER_IMAGE_Y = -CAMERA_VFOV_DEG * (INVERT_Y ? -1 : 1);
 
-// What we receive. Face 1 is the largest (closest) face, face 2 the second one.
-boolean present = true, present2 = false;  // Only for "mouse" mode: p and t switch them.
-float faceX = 0.5, faceY = 0.5, size = 0.2;  // Face 1 in the camera image, 0 to 1.
-float face2X = 0.5, face2Y = 0.5;          // Face 2 in the camera image.
-int lastFaceMs = -100000, lastFace2Ms = -100000;  // When we last saw each one. Long ago, so it starts idle.
+// What we receive: the largest (closest) face.
+boolean present = true;                    // Only for "mouse" mode: p switches it.
+float faceX = 0.5, faceY = 0.5, size = 0.2;  // The face in the camera image, 0 to 1.
+int lastFaceMs = -100000;                  // When we last saw it. Long ago, so it starts idle.
 boolean newFace = false;                   // A new camera frame has arrived since the last draw().
 // Wekinator is a classifier with 5 classes, numbered from 1 in this order.
 final String[] EMOTIONS = {"neutral", "happy", "sad", "angry", "wink"};
@@ -113,15 +109,15 @@ String heardEmotion = "neutral";           // What Wekinator says right now.
 int heardSinceMs = 0;                      // Since when it has said it.
 
 // What we decide
-String state = "idle";                     // "idle", "greeting", "tracking", "shy" or "sad".
+String state = "idle";                     // "idle", "greeting", "tracking" or "sad".
 int stateStartMs = 0;                      // When the current state began.
-float cx = 0.5, cy = 0.5, cx2 = 0.5, cy2 = 0.5;  // The faces as seen by a camera turning with the mirror.
+float cx = 0.5, cy = 0.5;                  // The face as seen by a camera turning with the mirror.
 float targetX = 0, targetY = 0;            // Where the mirror wants to go, in degrees.
+boolean following = false;                 // Tracking: true while it is re-centring a face that left the centre box.
 float angleX = 0, angleY = 0;              // Where it is now. Both start at 0, like the motors.
 float nodAmount = 0, nodY = 0;             // The small wink nod: how much (0 to 1), and its degrees now. Added to angleY.
 String emotion = "neutral";                // The emotion shown, once Wekinator has held it for EMOTION_HOLD_S.
 float greetCenterX = 0, greetCenterY = 0;  // Where the mirror was when the greeting began.
-float[] shyX = {0, 0}, shyY = {0, 0};      // Where the two people are, in mirror degrees.
 int lastMotionMs = 0;                      // When updateMotion() last ran, to limit the speed.
 float ledRed = 0, ledGreen = 0, ledBlue = 0;  // The solid colour now: drawn and sent.
 float rainbowPhase = 0;                    // 0 to 1: how far the rainbow has turned. Sent.
@@ -179,11 +175,6 @@ void oscEvent(OscMessage message) {
     lastFaceMs = millis();
     newFace = true;
   }
-  if (message.checkAddrPattern("/face2") && message.get(0).intValue() == 1) {
-    face2X = message.get(1).floatValue();
-    face2Y = message.get(2).floatValue();
-    lastFace2Ms = millis();
-  }
   // Wekinator sends one number: the class, from 1 to 5.
   if (message.checkAddrPattern("/wek/outputs")) {
     hearEmotion(EMOTIONS[constrain(round(message.get(0).floatValue()) - 1, 0, EMOTIONS.length - 1)]);
@@ -195,30 +186,21 @@ void readInput() {
     if (!mousePressed) {  // While dragging, the mouse rotates the view instead.
       faceX = mouseX / float(width);
       faceY = mouseY / float(height);
-      face2X = 1 - faceX;  // The second person stands mirrored across the centre.
-      face2Y = faceY;
     }
     if (present) {
       lastFaceMs = millis();
       newFace = true;
     }
-    if (present2) {
-      lastFace2Ms = millis();
-    }
   }
 
   // The closed loop needs a camera that turns with the mirror. The mouse and the laptop camera
-  // stay still, so we pretend: the faces move in the "image" by however much the mirror has turned.
+  // stay still, so we pretend: the face moves in the "image" by however much the mirror has turned.
   if (INPUT.equals("mirror camera")) {
     cx = faceX;
     cy = faceY;
-    cx2 = face2X;
-    cy2 = face2Y;
   } else {
     cx = constrain(faceX - angleX / DEG_PER_IMAGE_X, 0, 1);
     cy = constrain(faceY - (angleY - Y_LEVEL_DEG) / DEG_PER_IMAGE_Y, 0, 1);
-    cx2 = constrain(face2X - angleX / DEG_PER_IMAGE_X, 0, 1);
-    cy2 = constrain(face2Y - (angleY - Y_LEVEL_DEG) / DEG_PER_IMAGE_Y, 0, 1);
   }
 }
 
@@ -233,7 +215,6 @@ void keyPressed() {
     return;
   }
   if (key == 'p') present = !present;
-  if (key == 't') present2 = !present2;
   if (key >= '1' && key <= '5') hearEmotion(EMOTIONS[key - '1']);
 }
 
@@ -263,8 +244,6 @@ float secondsInState() {
 void updateState() {
   boolean faceNow = millis() - lastFaceMs < 300;                        // Seen in the last moment.
   boolean faceLost = millis() - lastFaceMs > NO_FACE_TIMEOUT_S * 1000;  // Gone for a while.
-  boolean secondFaceNow = TWO_PEOPLE && faceNow && millis() - lastFace2Ms < 300;
-  boolean secondFaceLost = millis() - lastFace2Ms > SHY_EXIT_S * 1000;
 
   String newState = state;
   if ((state.equals("idle") || state.equals("sad")) && faceNow) {
@@ -273,16 +252,7 @@ void updateState() {
     newState = "greeting";
   } else if (state.equals("greeting") && secondsInState() > GREETING_S) {
     newState = "tracking";
-  } else if (state.equals("tracking") && secondFaceNow) {
-    // Remember where the two people are: [0] is the one it is looking at, so the sweep starts there.
-    shyX[0] = faceAngleX(cx);
-    shyY[0] = faceAngleY(cy);
-    shyX[1] = faceAngleX(cx2);
-    shyY[1] = faceAngleY(cy2);
-    newState = "shy";
-  } else if (state.equals("shy") && secondFaceLost) {
-    newState = "tracking";
-  } else if ((state.equals("tracking") || state.equals("shy")) && faceLost) {
+  } else if (state.equals("tracking") && faceLost) {
     newState = "sad";
   } else if (state.equals("sad") && secondsInState() > SAD_S) {
     newState = "idle";
@@ -302,26 +272,24 @@ void updateMotion() {
     // (CLOSED_LOOP_GAIN) from where the mirror is to where the face is. When the face is centred
     // there is nothing left to correct, and it stops by itself.
     // Only new frames count: the image is a little late, and reusing one would correct twice.
-    if (abs(faceAngleX(cx) - angleX) > DEAD_ZONE_DEG) {
+    //
+    // The centre box keeps it calm: while the face stays inside the box, the mirror rests.
+    // When the face leaves the box, the mirror follows until the face is back at the centre
+    // (within DEAD_ZONE_DEG), and then rests again.
+    boolean insideBox = abs(cx - 0.5) < CENTRE_BOX_W / 2 && abs(cy - 0.5) < CENTRE_BOX_H / 2;
+    boolean centred = abs(faceAngleX(cx) - angleX) < DEAD_ZONE_DEG && abs(faceAngleY(cy) - angleY) < DEAD_ZONE_DEG;
+    if (!insideBox) {
+      following = true;
+    } else if (centred) {
+      following = false;
+    }
+    if (following) {
       targetX = lerp(angleX, faceAngleX(cx), CLOSED_LOOP_GAIN);
-    }
-    if (abs(faceAngleY(cy) - angleY) > DEAD_ZONE_DEG) {
       targetY = lerp(angleY, faceAngleY(cy), CLOSED_LOOP_GAIN);
+    } else {
+      targetX = angleX;  // Rest where it is.
+      targetY = angleY;
     }
-  } else if (state.equals("shy")) {
-    // The positions are remembered, because while it looks at one person the other may be out
-    // of the camera's view. Whoever is visible keeps their remembered position up to date.
-    if (newFace) {
-      rememberFace(cx, cy);
-      if (millis() - lastFace2Ms < 300) {
-        rememberFace(cx2, cy2);
-      }
-    }
-    // A slow sweep from the first person (0) to the other (1) and back. The cosine makes it
-    // slow down and linger at each person, and never jump.
-    float towardsOther = (1 - cos(TWO_PI * secondsInState() / SHY_SWEEP_S)) / 2;
-    targetX = lerp(shyX[0], shyX[1], towardsOther);
-    targetY = lerp(shyY[0], shyY[1], towardsOther);
   } else if (state.equals("greeting")) {
     // One happy circle, starting and ending where it was. It goes up from the lower half of the
     // tilt range and down from the upper half, so it stays inside the limits.
@@ -343,7 +311,7 @@ void updateMotion() {
   // Move towards the target: each frame, a share of the remaining distance.
   // But never faster than the motors can go. Otherwise the angle here runs ahead of the real
   // mirror, the camera still sees the face off-centre, the loop adds more correction, and it overshoots.
-  boolean calm = state.equals("idle") || state.equals("shy") || state.equals("sad");
+  boolean calm = state.equals("idle") || state.equals("sad");
   float smoothing = calm ? GENTLE_SMOOTHING : FAST_SMOOTHING;
   float seconds = (millis() - lastMotionMs) / 1000.0;
   lastMotionMs = millis();
@@ -367,14 +335,6 @@ float faceAngleY(float y) {
   return angleY + (y - 0.5) * DEG_PER_IMAGE_Y;
 }
 
-// Shy: a visible face updates whichever remembered person it is closer to, gently, to ignore noise.
-void rememberFace(float x, float y) {
-  float a = faceAngleX(x);
-  int nearest = abs(a - shyX[0]) < abs(a - shyX[1]) ? 0 : 1;
-  shyX[nearest] += (a - shyX[nearest]) * 0.3;
-  shyY[nearest] += (faceAngleY(y) - shyY[nearest]) * 0.3;
-}
-
 // The lights, in each state. Two things fade smoothly: the solid colour, and the mix between
 // that colour and the rainbow. So every change, including to and from the rainbow, is a fade.
 void updateLights() {
@@ -386,8 +346,6 @@ void updateLights() {
     wantedMix = 1;
   } else if (state.equals("greeting")) {
     wanted = HAPPY_COLOR;
-  } else if (state.equals("shy")) {
-    wanted = SHY_COLOR;
   } else if (state.equals("sad")) {
     wanted = lerpColor(SAD_COLOR, color(0), min(secondsInState() / SAD_S, 1));  // Blue, slowly fading to dark.
   } else {
@@ -410,7 +368,7 @@ color emotionColor() {
 }
 
 // The curve, in each state.
-// Idle and shy: a slow pulse, convex then concave, growing from nothing so it starts smoothly.
+// Idle: a slow pulse, convex then concave, growing from nothing so it starts smoothly.
 // Greeting and tracking: keep the face at the same zoom, calm on purpose:
 //   1. The closer a face, the bigger it looks, so distance = k / size.
 //   2. A concave mirror magnifies by zoom = f / (f - distance), where f is its focal length.
@@ -422,7 +380,7 @@ void updateConvexity() {
   smoothSize += (size - smoothSize) * SIZE_SMOOTHING;
   distanceM = DISTANCE_CALIB_K / max(smoothSize, 0.01);
 
-  if (state.equals("idle") || state.equals("shy")) {
+  if (state.equals("idle")) {
     float grow = min(secondsInState() / PULSE_PERIOD_S, 1);  // From 0 to 1 over the first pulse.
     wantedConvexity = PULSE_AMOUNT * grow * sin(TWO_PI * secondsInState() / PULSE_PERIOD_S);
   } else if (state.equals("sad")) {

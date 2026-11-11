@@ -15,21 +15,20 @@ Demirah is a round mirror that turns to face you, reads your expression and reac
 
 ```
 ESP32-CAM on the mirror ~~Wi-Fi~~> face_tracker.py (MediaPipe)
-                                     |- OSC /face, /face2 ------------------------> Processing
+                                     |- OSC /face --------------------------------> Processing
                                      '- OSC /wek/inputs -> Wekinator (5 classes) -> Processing
 Processing (behaviour + digital twin) -- USB serial --> Arduino Nano Every
                                                         -> stepper X (rotation), stepper Y (tilt),
                                                            servo (concavity), 75 LEDs
 ```
 
-The camera turns with the mirror, so the mirror keeps correcting until the face is in the centre of the image. This is a **closed loop**: motor and calibration errors correct themselves.
+The camera turns with the mirror, so the mirror keeps correcting until the face is in the centre of the image. This is a **closed loop**: motor and calibration errors correct themselves. While the face stays inside a **centre box** in the image, the mirror rests, so small movements do not disturb it.
 
 | State | When | What the mirror does |
 |---|---|---|
 | idle | Nobody there | Rests. The surface pulses and a rainbow turns around the LEDs |
 | greeting | A face appears | Draws a happy circle. LEDs turn orange |
-| tracking | After greeting | Follows the face. LEDs show the emotion. The surface keeps the face at the same zoom |
-| shy | Two faces (optional) | Rests on one person, then glances softly to the other, and back. LEDs turn pink |
+| tracking | After greeting | Follows the face when it leaves the centre box. LEDs show the emotion. The surface keeps the face at the same zoom |
 | sad | The face is gone | Looks down slowly. LEDs fade from blue to dark, then back to idle |
 
 Emotions, recognised by Wekinator: **neutral** (cream), **happy** (orange), **sad** (blue), **angry** (red), **wink** (green, and the head nods).
