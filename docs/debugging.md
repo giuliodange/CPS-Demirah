@@ -24,6 +24,7 @@ ESP32-CAM -> Python + MediaPipe -> Wekinator -> Processing -> Arduino -> motors,
 |---|---|
 | It waits 30 s, then can't open the stream | `MIRROR_CAMERA` has an old address, or the browser tab is still open |
 | With `--laptop`: it can't open the camera | Allow the terminal app in System Settings > Privacy & Security > Camera |
+| The preview is upside down, or finds no faces | Check `ROTATE_MIRROR_CAMERA` in `face_tracker.py`: `True` for the camera as mounted (upside down) |
 
 ## 3. Does Wekinator classify?
 

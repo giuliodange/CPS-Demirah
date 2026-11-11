@@ -48,7 +48,8 @@ The course example passed one Wekinator class from Processing to the Arduino. On
 
 | Part | Addition |
 |---|---|
-| Perception | A MediaPipe tracker that finds two faces and sends 15 blendshape scores, and a preview that scales to the frame size |
+| Perception | A MediaPipe tracker that finds two faces and sends 15 blendshape scores, and a preview that scales to the frame size. The ESP32-CAM is mounted upside down, so its image is turned 180° first (`ROTATE_MIRROR_CAMERA`) |
+| Two people | The shy state rests on one face for `SHY_HOLD_S`, then glances to the other over `SHY_GLANCE_S` on an ease-in-out curve, with slow smoothing, so it never jumps |
 | Machine learning | A 5-class classifier trained on facial blendshapes instead of mouse position |
 | Behaviour | The closed loop, the 5-state machine, optics-based convexity, and smooth fades |
 | Simulation | Three input modes (`mirror camera`, `laptop camera`, `mouse`) to test without hardware |

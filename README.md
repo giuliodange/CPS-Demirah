@@ -29,7 +29,7 @@ The camera turns with the mirror, so the mirror keeps correcting until the face 
 | idle | Nobody there | Rests. The surface pulses and a rainbow turns around the LEDs |
 | greeting | A face appears | Draws a happy circle. LEDs turn orange |
 | tracking | After greeting | Follows the face. LEDs show the emotion. The surface keeps the face at the same zoom |
-| shy | Two faces (optional) | Looks at each person in turn. LEDs turn pink |
+| shy | Two faces (optional) | Rests on one person, then glances softly to the other, and back. LEDs turn pink |
 | sad | The face is gone | Looks down slowly. LEDs fade from blue to dark, then back to idle |
 
 Emotions, recognised by Wekinator: **neutral** (cream), **happy** (orange), **sad** (blue), **angry** (red), **wink** (green, and the head nods).

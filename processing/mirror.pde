@@ -36,7 +36,7 @@ import processing.serial.*;
 // ============================== CONFIG ==============================
 // --- Modes ---
 final boolean SIMULATION_ONLY = false; // true = no serial port, everything happens on screen.
-final String INPUT = "laptop camera";  // Where the faces come from:
+final String INPUT = "mirror camera";  // Where the faces come from:
                                        //   "mirror camera" = the ESP32-CAM on the mirror (start "Avvia camera specchio")
                                        //   "laptop camera" = the computer's camera, for testing (start "Avvia webcam computer")
                                        //   "mouse"         = no camera. Mouse = face, wheel = size, p = present,
@@ -50,10 +50,10 @@ final float CAMERA_VFOV_DEG = 42;      // Degrees it sees across its height. TOD
 final float CLOSED_LOOP_GAIN = 0.5;    // 0 to 1. Share of the face's offset corrected at each camera frame. Too high = it wobbles. (docs/calibration.md, step 5)
 final float DEAD_ZONE_DEG = 2;         // Degrees. A face this close to the centre counts as centred. (docs/calibration.md, step 5)
 final float XY_SMOOTHING = 0.3;        // 0 to 1. Fraction of the remaining distance covered each frame: higher = more reactive. (docs/calibration.md, step 5)
-final float X_MIN_DEG = -100;          // Degrees. TODO CALIBRATE: keep the same as in mirror.ino.
-final float X_MAX_DEG = 100;           // Degrees. TODO CALIBRATE
+final float X_MIN_DEG = -80;           // Degrees. TODO CALIBRATE: keep the same as in mirror.ino.
+final float X_MAX_DEG = 80;            // Degrees. TODO CALIBRATE
 final float Y_MIN_DEG = 0;             // Degrees. 0 = the head at rest, all the way down (cord slack). Keep it 0.
-final float Y_MAX_DEG = 30;            // Degrees. Highest tilt the cord can pull the head to. TODO CALIBRATE: keep the same as in mirror.ino.
+final float Y_MAX_DEG = 20;            // Degrees. Highest tilt the cord can pull the head to. TODO CALIBRATE: keep the same as in mirror.ino.
 final float Y_LEVEL_DEG = 15;          // Degrees. The tilt where the mirror looks straight ahead: idle rests here. TODO CALIBRATE (docs/calibration.md, step 2)
 
 // --- States ---
@@ -61,8 +61,9 @@ final float NO_FACE_TIMEOUT_S = 3;     // Seconds without a face before it gets 
 final float GREETING_S = 2;            // Seconds the celebration lasts.
 final float GREETING_TURNS = 1;        // How many happy circles the head draws in that time.
 final float GREETING_RADIUS_DEG = 10;  // Degrees. Size of the happy circles.
-final float SHY_SWITCH_S = 2.5;        // Seconds it looks at one face before turning to the other.
-final float SHY_EXIT_S = 4;            // Seconds with only one face before it stops being shy. Keep it above SHY_SWITCH_S.
+final float SHY_HOLD_S = 2;            // Seconds it rests on one face before glancing at the other.
+final float SHY_GLANCE_S = 1.2;        // Seconds the glance from one face to the other takes. Longer = softer.
+final float SHY_EXIT_S = 4;            // Seconds with only one face before it stops being shy. Keep it above SHY_HOLD_S + SHY_GLANCE_S.
 final float SAD_S = 2;                 // Seconds it stays sad before going idle. Its blue fades to dark over this time.
 final float SAD_TILT_DEG = 0;          // Degrees. Where it looks when sad: 0 = all the way down.
 final float GENTLE_SMOOTHING = 0.04;   // 0 to 1. Like XY_SMOOTHING, but slower: used when getting sad and going back to idle.
@@ -119,6 +120,7 @@ float nodAmount = 0, nodY = 0;             // The small wink nod: how much (0 to
 String emotion = "neutral";                // The emotion shown, once Wekinator has held it for EMOTION_HOLD_S.
 float greetCenterX = 0, greetCenterY = 0;  // Where the happy circles are drawn around.
 float[] shyX = {0, 0}, shyY = {0, 0};      // Where the two people are, in mirror degrees. [0] = left, [1] = right.
+int shyFirst = 0;                          // The person the shy sweep starts from: the one it was looking at.
 float ledRed = 0, ledGreen = 0, ledBlue = 0;  // The solid colour now: drawn and sent.
 float rainbowPhase = 0;                    // 0 to 1: how far the rainbow has turned. Sent.
 float rainbowMix = 1;                      // 0 = solid colour only, 1 = rainbow only. Sent.
@@ -320,9 +322,16 @@ void updateMotion() {
         rememberFace(cx2, cy2);
       }
     }
-    int side = int(secondsInState / SHY_SWITCH_S) % 2;
-    targetX = shyX[side];
-    targetY = shyY[side];
+    // A soft sweep: rest on the first face, glance to the other, rest, glance back. 0 = first face, 1 = the other.
+    float cycle = SHY_HOLD_S + SHY_GLANCE_S;
+    float t = secondsInState % (2 * cycle);
+    float towardsOther;
+    if (t < SHY_HOLD_S) towardsOther = 0;
+    else if (t < cycle) towardsOther = easeInOut((t - SHY_HOLD_S) / SHY_GLANCE_S);
+    else if (t < cycle + SHY_HOLD_S) towardsOther = 1;
+    else towardsOther = 1 - easeInOut((t - cycle - SHY_HOLD_S) / SHY_GLANCE_S);
+    targetX = lerp(shyX[shyFirst], shyX[1 - shyFirst], towardsOther);
+    targetY = lerp(shyY[shyFirst], shyY[1 - shyFirst], towardsOther);
   } else if (state.equals("greeting")) {
     // Happy circles, starting and ending where it was. They go up from the lower half of the
     // range and down from the upper half, so they stay inside the limits.
@@ -341,9 +350,9 @@ void updateMotion() {
   targetX = constrain(targetX, X_MIN_DEG, X_MAX_DEG);
   targetY = constrain(targetY, Y_MIN_DEG, Y_MAX_DEG);
 
-  // Each frame, cover a fraction of the remaining distance: quickly while following people,
-  // slowly when it gets sad and when it goes back to rest, so those moves look calm.
-  float smoothing = state.equals("sad") || state.equals("idle") ? GENTLE_SMOOTHING : XY_SMOOTHING;
+  // Each frame, cover a fraction of the remaining distance: quickly while following one person,
+  // slowly when shy, when it gets sad and when it goes back to rest, so those moves look calm.
+  float smoothing = state.equals("sad") || state.equals("idle") || state.equals("shy") ? GENTLE_SMOOTHING : XY_SMOOTHING;
   angleX += (targetX - angleX) * smoothing;
   angleY += (targetY - angleY) * smoothing;
 
@@ -370,6 +379,13 @@ void rememberBothFaces() {
   shyY[left] = faceAngleY(cy);
   shyX[1 - left] = b;
   shyY[1 - left] = faceAngleY(cy2);
+  // Start from the person it is already looking at, so entering shy never jumps.
+  shyFirst = abs(shyX[0] - angleX) < abs(shyX[1] - angleX) ? 0 : 1;
+}
+
+// 0 to 1 with a soft start and a soft stop (half a cosine wave).
+float easeInOut(float u) {
+  return (1 - cos(PI * constrain(u, 0, 1))) / 2;
 }
 
 // One face is visible: update whichever stored person it is closer to, gently, to ignore noise.

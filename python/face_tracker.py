@@ -24,7 +24,9 @@ from pythonosc.udp_client import SimpleUDPClient
 # ============================== CONFIG ==============================
 MIRROR_CAMERA = "http://172.20.10.4:81/stream"  # The ESP32-CAM on the mirror. Its address is printed in its Serial Monitor.
 LAPTOP_CAMERA = 0       # The computer's own camera. Used with --laptop; set INPUT = "laptop camera" in mirror.pde.
-CAMERA_INDEX = LAPTOP_CAMERA if "--laptop" in sys.argv else MIRROR_CAMERA
+USE_LAPTOP = "--laptop" in sys.argv
+CAMERA_INDEX = LAPTOP_CAMERA if USE_LAPTOP else MIRROR_CAMERA
+ROTATE_MIRROR_CAMERA = True  # The ESP32-CAM is mounted upside down: turn its image 180 degrees before anything else.
 MIRROR_IMAGE = True     # Flip the image like a selfie, so cx grows when the person moves to THEIR right.
 MAX_FACES = 4           # How many faces MediaPipe looks for. The two largest are sent.
 PROCESSING_PORT = 12000 # UDP port Processing listens on. Must match OSC_PORT in the sketch.
@@ -67,6 +69,8 @@ while True:
     got_frame, frame = camera.read()
     if not got_frame:
         break
+    if ROTATE_MIRROR_CAMERA and not USE_LAPTOP:
+        frame = cv2.rotate(frame, cv2.ROTATE_180)
     if MIRROR_IMAGE:
         frame = cv2.flip(frame, 1)
     height, width = frame.shape[:2]

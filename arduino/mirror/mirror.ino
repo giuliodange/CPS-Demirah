@@ -35,12 +35,12 @@ const int PIN_SERVO = 9;                                                // Servo
 const int PIN_LEDS = 6;                                                 // LED strip data, through a 330 ohm resistor
 
 // --- Degrees to steps. The motor alone needs 4096 half-steps per turn: 4096 / 360 = 11.38 ---
-const float STEPS_PER_DEG_X = 30;     // Steps per degree of rotation. TODO CALIBRATE (docs/calibration.md, step 2). Negative = opposite direction.
-const float STEPS_PER_DEG_Y = 11.38;  // Steps per degree of tilt. TODO CALIBRATE (docs/calibration.md, step 2). Negative = opposite direction.
+const float STEPS_PER_DEG_X = 50;     // Steps per degree of rotation. TODO CALIBRATE (docs/calibration.md, step 2). Negative = opposite direction.
+const float STEPS_PER_DEG_Y = 250;  // Steps per degree of tilt. TODO CALIBRATE (docs/calibration.md, step 2). Negative = opposite direction.
 
 // --- Safety limits: never past these, whatever arrives. Keep them the same as in mirror.pde ---
-const float X_MIN_DEG = -100, X_MAX_DEG = 100;// Degrees. TODO CALIBRATE
-const float Y_MIN_DEG = 0, Y_MAX_DEG = 30;    // Degrees. 0 = head at rest, all the way down. Y_MAX_DEG: TODO CALIBRATE
+const float X_MIN_DEG = -80, X_MAX_DEG = 80;// Degrees. TODO CALIBRATE
+const float Y_MIN_DEG = 0, Y_MAX_DEG = 20;    // Degrees. 0 = head at rest, all the way down. Y_MAX_DEG: TODO CALIBRATE
 
 // --- Stepper motion: higher = more reactive, but too high and the motor skips steps ---
 const float MAX_SPEED = 800;   // Steps per second. The 28BYJ-48 reaches at most about 1024. TODO CALIBRATE (docs/calibration.md, step 5)

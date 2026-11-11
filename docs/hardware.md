@@ -9,7 +9,7 @@
 | Stepper Y, 28BYJ-48 5 V + Seeed ULN2003 driver | Pulls the tilt cord | Cheap and geared. Its gearbox holds the head when the coils are off |
 | Servo SG90 | Pushes the rack: concavity | Small and light enough to sit in the head. It holds a position from a single signal |
 | 75 × WS2812 LEDs | Colour around the mirror | Each LED is controlled separately over one data wire, which makes the rainbow and the fades possible |
-| ESP32-CAM (OV2640) | Camera on the head, streaming over Wi-Fi | Light and wireless, so the camera can turn with the mirror without a USB cable |
+| ESP32-CAM (OV2640) | Camera on the head, streaming over Wi-Fi. Mounted upside down: `face_tracker.py` turns the image 180° | Light and wireless, so the camera can turn with the mirror without a USB cable |
 | Power Board (custom) | Supplies 12 V and 5 V. Limits the current to 2 A | Keeps the motors and LEDs off the computer's USB port |
 | 330 Ω resistor | On the LED data wire | Protects the first LED from voltage spikes on the data line |
 | 1000 µF capacitor | Across the LEDs' 5 V and GND | Absorbs the current surge when the LEDs switch on |

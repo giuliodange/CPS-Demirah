@@ -62,6 +62,7 @@ void loop() {
     } else if (command == 'z') {
       stepperX.setCurrentPosition(0);
       stepperY.setCurrentPosition(0);
+      Serial.println("x and y at position 0");
     } else if (command == 's') {
       int pulseUs = Serial.parseInt();
       servoWrite(pulseUs);
