@@ -33,7 +33,7 @@
 
 // Motor steps for one degree of movement. Negative = the motor turns the other way.
 const float STEPS_PER_DEG_X = 50;
-const float STEPS_PER_DEG_Y = 250;
+const float STEPS_PER_DEG_Y = -250;
 
 // Limits in degrees: the motors never go past these, whatever arrives. [COPY]
 const float X_MIN_DEG = -80, X_MAX_DEG = 80;
