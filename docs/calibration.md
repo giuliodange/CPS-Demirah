@@ -12,6 +12,7 @@ Do the steps **in order**: each one relies on the ones before. Every value to me
 | `s 1500` | Send the servo a 1500 µs pulse |
 | `l 255 0 0` | Set all LEDs to red, green, blue. `l 0 0 0` turns them off |
 | `d` | Switch the stepper coils off |
+| `v 700` | Set the top speed of both steppers, in steps per second (it starts at 300) |
 
 **This sketch has no limits.** Start with small moves (100 steps, or 50 µs on the servo).
 
@@ -50,7 +51,7 @@ In a closed loop this only changes the **speed**, not where the mirror stops: to
 
 Change one value at a time:
 
-1. **`MAX_SPEED_X`, `ACCEL_X`, `MAX_SPEED_Y`, `ACCEL_Y`** (`mirror.ino`): raise them until a quick move skips steps, then go back about 20%. Then set `X_MAX_DEG_PER_S` and `Y_MAX_DEG_PER_S` in `mirror.pde` to `MAX_SPEED ÷ STEPS_PER_DEG` of each axis, so Processing never asks for more speed than the motor has (otherwise the loop overshoots).
+1. **`MAX_SPEED_X`, `ACCEL_X`, `MAX_SPEED_Y`, `ACCEL_Y`** (`mirror.ino`): raise them until a quick move skips steps, then go back about 20%. For Y, test **lifting from the bottom** with the mirror fitted: start with the head at the bottom and `z` typed there, then `v 500`, `y 2500` (up), `y -2500` (back down), raising `v` by 100 each time. The first speed at which it buzzes without lifting is too fast. Then set `X_MAX_DEG_PER_S` and `Y_MAX_DEG_PER_S` in `mirror.pde` to `MAX_SPEED ÷ STEPS_PER_DEG` of each axis, so Processing never asks for more speed than the motor has (otherwise the loop overshoots).
 2. **`CLOSED_LOOP_GAIN`** (`mirror.pde`): start at 0.35. Take a quick step sideways, and raise the gain by 0.1 at a time until the mirror overshoots and swings back. Then go back 0.1-0.2.
 3. **`DEAD_ZONE_DEG`:** stand still. If the mirror keeps correcting, raise it by 0.5 at a time until it stays still.
 4. **`XY_SMOOTHING`:** 0.3 is reactive. If the motion is jerky, use 0.2.

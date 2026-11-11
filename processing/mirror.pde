@@ -55,7 +55,7 @@ final float X_MAX_DEG = 80;            // Degrees. TODO CALIBRATE
 final float Y_MIN_DEG = 0;             // Degrees. 0 = the head at rest, all the way down (cord slack). Keep it 0.
 final float Y_MAX_DEG = 30;            // Degrees. Highest tilt the cord can pull the head to. TODO CALIBRATE: keep the same as in mirror.ino.
 final float X_MAX_DEG_PER_S = 16;      // Fastest the base turns: MAX_SPEED_X / STEPS_PER_DEG_X in mirror.ino (800 / 50). Keep them in step.
-final float Y_MAX_DEG_PER_S = 4;       // Fastest the head tilts: MAX_SPEED_Y / STEPS_PER_DEG_Y in mirror.ino (1000 / 250). Keep them in step.
+final float Y_MAX_DEG_PER_S = 2.8;     // Fastest the head tilts: MAX_SPEED_Y / STEPS_PER_DEG_Y in mirror.ino (700 / 250). Keep them in step.
 final float Y_LEVEL_DEG = 15;          // Degrees. The tilt where the mirror looks straight ahead: idle rests here. TODO CALIBRATE (docs/calibration.md, step 2)
 
 // --- States ---

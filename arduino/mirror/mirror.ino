@@ -47,8 +47,9 @@ const float Y_MIN_DEG = 0, Y_MAX_DEG = 30;    // Degrees. 0 = head at rest, all 
 // Keep X_MAX_DEG_PER_S and Y_MAX_DEG_PER_S in mirror.pde = MAX_SPEED / STEPS_PER_DEG.
 const float MAX_SPEED_X = 800;   // Steps per second. TODO CALIBRATE (docs/calibration.md, step 5)
 const float ACCEL_X = 2000;      // Steps per second, per second. TODO CALIBRATE (docs/calibration.md, step 5)
-const float MAX_SPEED_Y = 1000;  // Steps per second. The 28BYJ-48 reaches at most about 1024. TODO CALIBRATE (docs/calibration.md, step 5)
-const float ACCEL_Y = 1500;      // Steps per second, per second. Lower if it skips steps while lifting. TODO CALIBRATE
+const float MAX_SPEED_Y = 700;   // Steps per second. Y lifts the head, and a stepper loses torque as it speeds up:
+                                 // too fast and it buzzes without lifting. Find the limit with "v" in calibration.ino. TODO CALIBRATE (docs/calibration.md, step 5)
+const float ACCEL_Y = 800;       // Steps per second, per second. Lower if it skips steps while lifting. TODO CALIBRATE
 
 // --- Saving power ---
 const unsigned long IDLE_DISABLE_MS = 2000;  // Milliseconds stopped before the coils switch off.

@@ -12,6 +12,7 @@
     s 1500      send the convexity servo a 1500 microsecond pulse (about 1000 to 2000)
     l 255 0 0   set all LEDs to red, green, blue (l 0 0 0 = off)
     d           switch the stepper coils off, until the next move
+    v 700       set the top speed of both steppers, in steps per second (start: 300)
 
   CAREFUL: this sketch has NO limits. Start with small moves (100 steps, or 50
   microseconds on the servo), so nothing hits an end stop or twists the cables.
@@ -77,6 +78,13 @@ void loop() {
         strip.setPixelColor(i, red, green, blue);
       }
       strip.show();
+    } else if (command == 'v') {
+      int speed = Serial.parseInt();
+      stepperX.setMaxSpeed(speed);
+      stepperY.setMaxSpeed(speed);
+      Serial.print("Top speed: ");
+      Serial.print(speed);
+      Serial.println(" steps/s");
     } else if (command == 'd') {
       stepperX.disableOutputs();
       stepperY.disableOutputs();

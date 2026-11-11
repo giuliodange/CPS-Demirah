@@ -54,6 +54,7 @@ ESP32-CAM -> Python + MediaPipe -> Wekinator -> Processing -> Arduino -> motors,
 | The twin turns away from the face | Wrong sign: see [calibration.md](calibration.md), step 3 |
 | The twin wobbles around the face | `CLOSED_LOOP_GAIN` is too high (calibration step 5) |
 | The real mirror overshoots, but the twin does not | `X_MAX_DEG_PER_S` or `Y_MAX_DEG_PER_S` is higher than the motor's real speed (calibration step 5) |
+| The head stays down after sad, or buzzes without lifting | `MAX_SPEED_Y` is too fast to lift the head: lower it (calibration step 5) and `Y_MAX_DEG_PER_S` with it |
 | The head never reaches the top | `Y_MAX_DEG` differs between `mirror.ino` and `mirror.pde`, or Y loses steps while lifting: lower `ACCEL_Y` |
 
 ## 5. Does the Arduino accept the line?
