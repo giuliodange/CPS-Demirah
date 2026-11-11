@@ -63,7 +63,7 @@ void drawTwin() {
   // Tilt 0 is all the way down and Y_LEVEL_DEG looks straight ahead, so the head is drawn
   // pitched by (tilt - Y_LEVEL_DEG): negative = down, positive = up.
   translate(0, -JOINT_HEIGHT, JOINT_Z);
-  rotateX(radians(angleY + nodY - Y_LEVEL_DEG));
+  rotateX(radians(angleY - Y_LEVEL_DEG));
   fill(110, 110, 115);
   sphere(22);
   drawRod(MIRROR_OFFSET - MIRROR_THICKNESS - MAX_SAG_MM);
@@ -259,10 +259,10 @@ void drawHud() {
   textSize(15);
   text("STATE     " + state + "   (input: " + INPUT + ")"
     + "\nRECEIVED  face=" + nf(faceX, 0, 2) + "," + nf(faceY, 0, 2) + "  as seen from the mirror=" + nf(cx, 0, 2) + "," + nf(cy, 0, 2) + "  size=" + nf(size, 0, 2)
-    + "\nANGLES    x=" + nf(angleX, 0, 1) + "  y=" + nf(angleY + nodY, 0, 1)
+    + "\nANGLES    x=" + nf(angleX, 0, 1) + "  y=" + nf(angleY, 0, 1)
     + "\nEMOTION   " + emotion + (heardEmotion.equals(emotion) ? "" : "  (hearing " + heardEmotion + ")")
     + "\nLIGHTS    colour=" + round(ledRed) + "," + round(ledGreen) + "," + round(ledBlue) + "  rainbow=" + nf(rainbowMix, 0, 2)
-    + "\nCONVEXITY size=" + nf(smoothSize, 0, 3) + "  distance=" + nf(distanceM, 0, 2) + " m  c=" + nf(convexity, 0, 2)
+    + "\nCONVEXITY c=" + nf(convexity, 0, 2)
     + "\nSENT      " + lastSentLine.trim()
     + "\nSERIAL    " + (port == null ? "off" : SERIAL_PORT_NAME), 20, 30);
   drawCameraView(width - 260, 20, 240, 180);

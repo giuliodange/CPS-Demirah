@@ -3,7 +3,7 @@
 **Cyber Physical Systems, IDE (Imperial College London / Royal College of Art)**
 Ruoxin Chen, Indiana Gothard, Giulio d'Angelantonio
 
-Demirah is a round mirror that turns to face you, reads your expression and reacts. It greets you with a happy circle, follows your face, changes the colour of its 75 LEDs with your emotion and bends its surface to keep your face at the same zoom. When you leave, it looks down sadly before going back to rest.
+Demirah is a round mirror that turns to face you, reads your expression and reacts. It greets you with a happy circle, follows your face, and answers your expression with the colour of its 75 LEDs and the shape of its surface: it goes concave when you smile, shakes when you frown, and swells when you blow at it. When you leave, it looks down sadly before going back to rest.
 
 | The built model (mirror and LEDs not yet fitted) | Digital twin: idle | Digital twin: tracking |
 |---|---|---|
@@ -28,10 +28,18 @@ The camera turns with the mirror, so the mirror keeps correcting until the face 
 |---|---|---|
 | idle | Nobody there | Rests. The surface pulses and a rainbow turns around the LEDs |
 | greeting | A face appears | Draws a happy circle. LEDs turn orange |
-| tracking | After greeting | Follows the face when it leaves the centre box. LEDs show the emotion. The surface keeps the face at the same zoom |
+| tracking | After greeting | Follows the face when it leaves the centre box. The LEDs and the surface show the emotion |
 | sad | The face is gone | Looks down slowly. LEDs fade from blue to dark, then back to idle |
 
-Emotions, recognised by Wekinator: **neutral** (cream), **happy** (orange), **sad** (blue), **angry** (red), **wink** (green, and the head nods).
+Expressions, recognised by Wekinator:
+
+| Expression | LEDs | Surface |
+|---|---|---|
+| neutral | White | Flat |
+| happy | Yellow | Goes concave |
+| wink | Green | One quick push |
+| angry | Red | Shakes |
+| blow | Blue | Slowly pushes out to convex |
 
 ## Documentation
 
@@ -67,7 +75,7 @@ Emotions, recognised by Wekinator: **neutral** (cream), **happy** (orange), **sa
 2. **Upload:** put `arduino/mirror/mirror.ino` on the Arduino Nano Every. For the camera, copy `esp32_cam/CameraWebServer/secrets.example.h` to `secrets.h`, fill in the Wi-Fi details, then upload the sketch to the ESP32-CAM.
 3. **Start, in this order:**
    1. The power board.
-   2. Wekinator: open `wekinator/5emotions/5emotions.wekproj` and click **Run**.
+   2. Wekinator: open the trained project (see [machine-learning.md](docs/machine-learning.md)) and click **Run**.
    3. `processing/mirror.pde`.
    4. The tracker:
       ```bash

@@ -84,9 +84,8 @@ Change one value at a time.
 | `SERVO_FLAT_US` (`mirror.ino`) | With `s`, the pulse that leaves the mirror flat |
 | `SERVO_RANGE_US` (`mirror.ino`) | Pulse for the deepest curve minus the flat pulse, without the sign. Make it negative if the curve goes the wrong way |
 | `MAX_SAG_MM` (`mirror.pde`) | Depth of the deepest curve, in mm |
-| `DISTANCE_CALIB_K` (`mirror.pde`) | Stand exactly 1 m from the camera and read `size` on the screen's `CONVEXITY` line |
 
-**If the servo keeps moving while you stand still,** try these one at a time: raise `CONVEXITY_DEAD_ZONE` to 0.1, or lower `SIZE_SMOOTHING` to 0.03.
+Then tune the gestures in `mirror.pde`, with `INPUT = "mouse"` and the keys 1-5: `HAPPY_CONVEXITY`, `WINK_PUSH`, `ANGRY_SHAKE` and `BLOW_CONVEXITY` set how far each one goes (-1 to +1). If the rack can only push, keep the concave values small.
 
 ## Step 7: LEDs and power
 

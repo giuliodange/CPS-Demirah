@@ -9,9 +9,12 @@
     greeting  a happy celebration: the head draws a circle, the LEDs fade to HAPPY_COLOR
        | the celebration ends
     tracking  it follows the face (closed loop), but rests while the face stays inside the
-              centre box. The colour shows the emotion from Wekinator: neutral, happy, sad,
-              angry, or a wink (green, and the head nods a little).
-              The curve keeps the face at the same zoom.
+              centre box. The colour and the curve show the emotion from Wekinator:
+                neutral   white, flat
+                happy     yellow, concave
+                wink      green, one quick push
+                angry     red, the surface shakes
+                blow      blue, slowly pushes out to convex (the person blows at the mirror)
        | no face for NO_FACE_TIMEOUT_S
     sad       it slowly looks down, the LEDs turn SAD_COLOR and fade to dark, then back to idle
               (if a face comes back while sad, it celebrates again)
@@ -35,8 +38,8 @@ final boolean SIMULATION_ONLY = false;  // true = no Arduino: everything happens
 final String INPUT = "mirror camera";   // Where the faces come from:
                                         //   "mirror camera" = the ESP32-CAM on the mirror (start "Avvia camera specchio")
                                         //   "laptop camera" = the computer's camera, for testing (start "Avvia webcam computer")
-                                        //   "mouse"         = no camera. Mouse = face, wheel = size, p = present,
-                                        //                     1-5 = emotion (neutral, happy, sad, angry, wink)
+                                        //   "mouse"         = no camera. Mouse = face, p = present,
+                                        //                     1-5 = emotion (neutral, happy, wink, angry, blow)
 final String SERIAL_PORT_NAME = "/dev/cu.usbmodem1101";  // The Arduino's port, from the list printed in the console.
 
 // ================= 2. CALIBRATE: measured on the real mirror (docs/calibration.md) =================
@@ -44,21 +47,20 @@ final String SERIAL_PORT_NAME = "/dev/cu.usbmodem1101";  // The Arduino's port, 
 // console ("[Arduino] mirror ready. Copy to mirror.pde: ..."): these five must match that line.
 final float X_MIN_DEG = -80, X_MAX_DEG = 80;  // Degrees the base can turn, each way from the centre.
 final float Y_MAX_DEG = 30;             // Degrees. Tilt goes from 0 (head all the way down) to this.
-final float X_MAX_DEG_PER_S = 16;       // Fastest the base turns: MAX_SPEED_X / STEPS_PER_DEG_X.
+final float X_MAX_DEG_PER_S = 8;       // Fastest the base turns: MAX_SPEED_X / STEPS_PER_DEG_X.
 final float Y_MAX_DEG_PER_S = 2.8;      // Fastest the head tilts: MAX_SPEED_Y / STEPS_PER_DEG_Y.
 
 // Measured here, with the whole system running.
 final float Y_LEVEL_DEG = 15;           // The tilt where the mirror looks straight ahead. Idle rests here.
-final boolean INVERT_X = false;         // Flip if the mirror turns AWAY from the face and runs to a limit.
+final boolean INVERT_X = true;         // Flip if the mirror turns AWAY from the face and runs to a limit.
 final boolean INVERT_Y = false;         // Same, for the tilt.
 final float CAMERA_HFOV_DEG = 55;       // Degrees the mirror camera sees across its width.
 final float CAMERA_VFOV_DEG = 42;       // Degrees it sees across its height.
-final float DISTANCE_CALIB_K = 0.2;     // Stand exactly 1 m from the camera and write here the "size" shown on screen.
-final float MAX_SAG_MM = 30;            // Millimetres. Deepest curve the mirror can make (convexity -1 or +1).
+final float MAX_SAG_MM = 30;            // Millimetres. Deepest curve the mirror can make (convexity -1 or +1). Only for the drawing.
 
 // ================= 3. TUNE: how the mirror behaves =================
 // --- Following a face ---
-final float CLOSED_LOOP_GAIN = 0.35;    // 0 to 1. Share of the way to the face covered at each camera frame. Too high = it overshoots.
+final float CLOSED_LOOP_GAIN = 0.2;    // 0 to 1. Share of the way to the face covered at each camera frame. Too high = it overshoots.
 final float CENTRE_BOX_W = 0.3;         // 0 to 1. Width of the centre box, as a share of the image. While the face stays
 final float CENTRE_BOX_H = 0.3;         // inside the box, the mirror does not move. Same for the height. Bigger = calmer.
 final float DEAD_ZONE_DEG = 2;          // Degrees. When the face leaves the box, the mirror re-centres it to within this, then rests again.
@@ -70,25 +72,30 @@ final float NO_FACE_TIMEOUT_S = 3;      // Seconds without a face before it gets
 final float GREETING_S = 2;             // Seconds the celebration lasts: one happy circle.
 final float GREETING_RADIUS_DEG = 10;   // Degrees. Size of the happy circle.
 final float SAD_S = 2;                  // Seconds it stays sad before going idle. Its blue fades to dark over this time.
-final float WINK_NOD_DEG = 3;           // Degrees. How far the head nods up and down after a wink: very little.
 final float EMOTION_HOLD_S = 0.3;       // Seconds Wekinator must say the same emotion before it shows, so it does not flicker.
 
 // --- Lights ---
-final color NEUTRAL_COLOR = #FFE0B0;    // Emotion "neutral".
-final color HAPPY_COLOR = #FFA000;      // Emotion "happy", and when greeting.
-final color SAD_COLOR = #2040FF;        // Emotion "sad", and when sad.
-final color ANGRY_COLOR = #FF0000;      // Emotion "angry".
-final color WINK_COLOR = #00FF40;       // Emotion "wink".
+final color NEUTRAL_COLOR = #FFFFFF;    // Emotion "neutral": white.
+final color HAPPY_COLOR = #FFD000;      // Emotion "happy", and when greeting: yellow.
+final color WINK_COLOR = #00FF40;       // Emotion "wink": green.
+final color ANGRY_COLOR = #FF0000;      // Emotion "angry": red.
+final color BLOW_COLOR = #2040FF;       // Emotion "blow": blue.
+final color SAD_COLOR = #2040FF;        // The sad state, when the person has left: blue, fading to dark.
 final float LIGHT_SMOOTHING = 0.03;     // 0 to 1. Lower = slower fades between colours, and to and from the rainbow.
 final float RAINBOW_TURNS_PER_S = 0.2;  // How fast the idle rainbow turns around the ring.
 
-// --- Convexity: tuned to be calm ---
-final float ZOOM = 3;                   // Magnification to keep while tracking, above 1.
+// --- Convexity: -1 = fully concave, 0 = flat, +1 = fully convex (the rack pushes the mirror out) ---
 final float PULSE_PERIOD_S = 4;         // Seconds for one in-and-out pulse of the curve, in idle.
-final float PULSE_AMOUNT = 0.6;         // 0 to 1. How far the pulse goes, both convex and concave.
-final float SIZE_SMOOTHING = 0.05;      // 0 to 1. Smooths the face size first: it is the noisiest number.
-final float CONVEXITY_DEAD_ZONE = 0.05; // Changes of convexity smaller than this are ignored while tracking.
-final float CONVEXITY_SMOOTHING = 0.03; // 0 to 1. Lower = slower and calmer changes of shape.
+final float PULSE_AMOUNT = 0.6;         // 0 to 1. How far the idle pulse goes, both convex and concave.
+final float HAPPY_CONVEXITY = -0.8;     // Happy: how concave it goes.
+final float WINK_PUSH = 0.6;            // Wink: how far the quick push goes out.
+final float WINK_PUSH_S = 0.35;         // Wink: seconds the push lasts before it comes back.
+final float ANGRY_SHAKE = 0.3;          // Angry: how far the surface shakes, each way.
+final float ANGRY_SHAKE_HZ = 4;         // Angry: shakes per second.
+final float BLOW_CONVEXITY = 1;         // Blow: how convex it ends up.
+final float CONVEXITY_SMOOTHING = 0.04; // 0 to 1. Share of the remaining change covered each frame: lower = slower.
+final float CONVEXITY_FAST = 0.4;       // The same, for the wink push and the angry shake.
+final float CONVEXITY_SLOW = 0.008;     // The same, for the slow push of "blow".
 
 final int OSC_PORT = 12000;             // UDP port to listen on. Must match PROCESSING_PORT in face_tracker.py.
 // ====================================================================
@@ -100,11 +107,12 @@ final float DEG_PER_IMAGE_Y = -CAMERA_VFOV_DEG * (INVERT_Y ? -1 : 1);
 
 // What we receive: the largest (closest) face.
 boolean present = true;                    // Only for "mouse" mode: p switches it.
-float faceX = 0.5, faceY = 0.5, size = 0.2;  // The face in the camera image, 0 to 1.
+float faceX = 0.5, faceY = 0.5;            // The face's centre in the camera image, 0 to 1.
+float size = 0.2;                          // Its width in the image: bigger = closer. Only shown on screen.
 int lastFaceMs = -100000;                  // When we last saw it. Long ago, so it starts idle.
 boolean newFace = false;                   // A new camera frame has arrived since the last draw().
 // Wekinator is a classifier with 5 classes, numbered from 1 in this order.
-final String[] EMOTIONS = {"neutral", "happy", "sad", "angry", "wink"};
+final String[] EMOTIONS = {"neutral", "happy", "wink", "angry", "blow"};
 String heardEmotion = "neutral";           // What Wekinator says right now.
 int heardSinceMs = 0;                      // Since when it has said it.
 
@@ -115,15 +123,13 @@ float cx = 0.5, cy = 0.5;                  // The face as seen by a camera turni
 float targetX = 0, targetY = 0;            // Where the mirror wants to go, in degrees.
 boolean following = false;                 // Tracking: true while it is re-centring a face that left the centre box.
 float angleX = 0, angleY = 0;              // Where it is now. Both start at 0, like the motors.
-float nodAmount = 0, nodY = 0;             // The small wink nod: how much (0 to 1), and its degrees now. Added to angleY.
 String emotion = "neutral";                // The emotion shown, once Wekinator has held it for EMOTION_HOLD_S.
+int emotionStartMs = 0;                    // When the emotion shown began.
 float greetCenterX = 0, greetCenterY = 0;  // Where the mirror was when the greeting began.
 int lastMotionMs = 0;                      // When updateMotion() last ran, to limit the speed.
 float ledRed = 0, ledGreen = 0, ledBlue = 0;  // The solid colour now: drawn and sent.
 float rainbowPhase = 0;                    // 0 to 1: how far the rainbow has turned. Sent.
 float rainbowMix = 1;                      // 0 = solid colour only, 1 = rainbow only. Sent.
-float smoothSize = 0.2;                    // The face size, smoothed.
-float distanceM = 1;                       // Estimated distance of the person, in metres.
 float wantedConvexity = 0;                 // The convexity we are heading to.
 float convexity = 0;                       // The convexity now: -1 = concave, +1 = convex. Drawn and sent.
 
@@ -204,12 +210,6 @@ void readInput() {
   }
 }
 
-void mouseWheel(MouseEvent event) {
-  if (INPUT.equals("mouse")) {
-    size = constrain(size - event.getCount() * 0.01, 0.02, 1);
-  }
-}
-
 void keyPressed() {
   if (!INPUT.equals("mouse")) {
     return;
@@ -230,8 +230,9 @@ void hearEmotion(String newEmotion) {
 // A classifier can flicker between classes for a frame or two, so an emotion only counts
 // once Wekinator has said it for EMOTION_HOLD_S.
 void updateEmotion() {
-  if (millis() - heardSinceMs > EMOTION_HOLD_S * 1000) {
+  if (millis() - heardSinceMs > EMOTION_HOLD_S * 1000 && !emotion.equals(heardEmotion)) {
     emotion = heardEmotion;
+    emotionStartMs = millis();
   }
 }
 
@@ -317,12 +318,6 @@ void updateMotion() {
   lastMotionMs = millis();
   angleX += constrain((targetX - angleX) * smoothing, -X_MAX_DEG_PER_S * seconds, X_MAX_DEG_PER_S * seconds);
   angleY += constrain((targetY - angleY) * smoothing, -Y_MAX_DEG_PER_S * seconds, Y_MAX_DEG_PER_S * seconds);
-
-  // After a wink, a small up-and-down nod on top of the tilt, one nod every 0.8 s.
-  // It fades in and out, so it never jumps.
-  boolean winking = state.equals("tracking") && emotion.equals("wink");
-  nodAmount += ((winking ? 1 : 0) - nodAmount) * 0.05;
-  nodY = nodAmount * WINK_NOD_DEG * sin(TWO_PI * millis() / 800.0);
 }
 
 // Where a face is, in mirror degrees: where the mirror points, plus the face's offset from the
@@ -361,39 +356,44 @@ void updateLights() {
 // One colour per emotion. The fade in updateLights() makes the changes smooth.
 color emotionColor() {
   if (emotion.equals("happy")) return HAPPY_COLOR;
-  if (emotion.equals("sad")) return SAD_COLOR;
-  if (emotion.equals("angry")) return ANGRY_COLOR;
   if (emotion.equals("wink")) return WINK_COLOR;
+  if (emotion.equals("angry")) return ANGRY_COLOR;
+  if (emotion.equals("blow")) return BLOW_COLOR;
   return NEUTRAL_COLOR;
 }
 
-// The curve, in each state.
-// Idle: a slow pulse, convex then concave, growing from nothing so it starts smoothly.
-// Greeting and tracking: keep the face at the same zoom, calm on purpose:
-//   1. The closer a face, the bigger it looks, so distance = k / size.
-//   2. A concave mirror magnifies by zoom = f / (f - distance), where f is its focal length.
-//      So f = zoom * distance / (zoom - 1): a person further away needs a flatter mirror.
-//   3. A mirror with focal length f is part of a sphere of radius 2f, and its centre sits
-//      rimRadius^2 / (2 * sphereRadius) behind its rim. That is the depth we need.
-// Sad: flat.
+// The curve, in each state. The servo is quick, so the curve can also do fast gestures.
+//   idle:      a slow pulse, convex then concave, growing from nothing so it starts smoothly.
+//   greeting:  concave, like happy.
+//   tracking:  one shape per emotion (see the list at the top).
+//   sad:       flat.
 void updateConvexity() {
-  smoothSize += (size - smoothSize) * SIZE_SMOOTHING;
-  distanceM = DISTANCE_CALIB_K / max(smoothSize, 0.01);
+  float secondsOfEmotion = (millis() - emotionStartMs) / 1000.0;
+  float smoothing = CONVEXITY_SMOOTHING;
 
   if (state.equals("idle")) {
     float grow = min(secondsInState() / PULSE_PERIOD_S, 1);  // From 0 to 1 over the first pulse.
     wantedConvexity = PULSE_AMOUNT * grow * sin(TWO_PI * secondsInState() / PULSE_PERIOD_S);
+  } else if (state.equals("greeting")) {
+    wantedConvexity = HAPPY_CONVEXITY;
   } else if (state.equals("sad")) {
     wantedConvexity = 0;
+  } else if (emotion.equals("happy")) {
+    wantedConvexity = HAPPY_CONVEXITY;
+  } else if (emotion.equals("wink")) {
+    // One quick push out, then back to flat. It happens once, when the wink begins.
+    wantedConvexity = secondsOfEmotion < WINK_PUSH_S ? WINK_PUSH : 0;
+    smoothing = CONVEXITY_FAST;
+  } else if (emotion.equals("angry")) {
+    wantedConvexity = ANGRY_SHAKE * sin(TWO_PI * ANGRY_SHAKE_HZ * secondsOfEmotion);
+    smoothing = CONVEXITY_FAST;
+  } else if (emotion.equals("blow")) {
+    wantedConvexity = BLOW_CONVEXITY;
+    smoothing = CONVEXITY_SLOW;
   } else {
-    float focalMm = ZOOM * distanceM / (ZOOM - 1) * 1000;
-    float sagMm = MIRROR_RADIUS * MIRROR_RADIUS / (2 * 2 * focalMm);
-    float wanted = -min(sagMm / MAX_SAG_MM, 1);
-    if (abs(wanted - wantedConvexity) > CONVEXITY_DEAD_ZONE) {  // Ignore small changes.
-      wantedConvexity = wanted;
-    }
+    wantedConvexity = 0;  // Neutral: flat.
   }
-  convexity += (wantedConvexity - convexity) * CONVEXITY_SMOOTHING;
+  convexity += (wantedConvexity - convexity) * smoothing;
 }
 
 // ---------------------------- 3. SEND ---------------------------
@@ -407,7 +407,7 @@ void sendToArduino() {
   }
   // Locale.US matters: on an Italian computer, the decimal point would otherwise be a comma.
   String line = String.format(java.util.Locale.US, "%.1f,%.1f,%d,%d,%d,%+.2f,%.3f,%.2f\n",
-    angleX, constrain(angleY + nodY, 0, Y_MAX_DEG), round(ledRed), round(ledGreen), round(ledBlue), convexity, rainbowPhase, rainbowMix);
+    angleX, angleY, round(ledRed), round(ledGreen), round(ledBlue), convexity, rainbowPhase, rainbowMix);
   if (line.equals(lastSentLine)) {
     return;
   }

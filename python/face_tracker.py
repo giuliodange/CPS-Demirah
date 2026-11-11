@@ -31,17 +31,16 @@ PROCESSING_PORT = 12000 # UDP port Processing listens on. Must match OSC_PORT in
 WEKINATOR_PORT = 6448   # UDP port Wekinator listens on (its default).
 
 # Blendshapes are MediaPipe's scores, from 0 to 1, for movements of the face. These help Wekinator
-# tell neutral, happy, sad, angry and a wink apart. If you change this list, create a new Wekinator
-# project with the same number of inputs (now 15) and train it again.
+# tell the 5 classes apart: 1 neutral, 2 happy, 3 wink, 4 angry, 5 blow (blowing at the mirror).
+# If you change this list, create a new Wekinator project with the same number of inputs
+# (now 13) and train it again.
 BLENDSHAPES_TO_SEND = [
     "mouthSmileLeft", "mouthSmileRight",       # happy
-    "mouthFrownLeft", "mouthFrownRight",       # sad
-    "mouthPressLeft", "mouthPressRight",       # sad, angry
-    "browInnerUp",                             # sad
-    "browDownLeft", "browDownRight",           # angry
-    "noseSneerLeft", "noseSneerRight",         # angry
     "eyeBlinkLeft", "eyeBlinkRight",           # wink: one eye closed, the other open
     "eyeSquintLeft", "eyeSquintRight",         # wink
+    "browDownLeft", "browDownRight",           # angry
+    "noseSneerLeft", "noseSneerRight",         # angry
+    "mouthPucker", "mouthFunnel", "cheekPuff", # blow: lips pushed forward into a small O
 ]
 # ====================================================================
 
