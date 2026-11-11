@@ -75,7 +75,7 @@ Expressions, recognised by Wekinator:
 2. **Upload:** put `arduino/mirror/mirror.ino` on the Arduino Nano Every. For the camera, copy `esp32_cam/CameraWebServer/secrets.example.h` to `secrets.h`, fill in the Wi-Fi details, then upload the sketch to the ESP32-CAM.
 3. **Start, in this order:**
    1. The power board.
-   2. Wekinator: open the trained project (see [machine-learning.md](docs/machine-learning.md)) and click **Run**.
+   2. Wekinator: open `wekinator/5emotions/5emotions.wekproj` and click **Run** (it must be retrained first: see [machine-learning.md](docs/machine-learning.md)).
    3. `processing/mirror.pde`.
    4. The tracker:
       ```bash

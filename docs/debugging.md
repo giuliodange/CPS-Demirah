@@ -33,7 +33,7 @@ ESP32-CAM -> Python + MediaPipe -> Wekinator -> Processing -> Arduino -> motors,
 | If not | Fix |
 |---|---|
 | OSC In is off | The tracker isn't running, or the project isn't listening on port 6448 |
-| Wekinator reports the wrong number of inputs | The project must have 13 inputs, matching `BLENDSHAPES_TO_SEND` |
+| Wekinator reports the wrong number of inputs | The project must have 15 inputs, matching `BLENDSHAPES_TO_SEND` |
 | Wrong class | Record more examples of the confused classes, then train again (see [machine-learning.md](machine-learning.md)) |
 
 ## 4. Does Processing receive and decide?

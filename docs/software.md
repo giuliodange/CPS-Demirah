@@ -6,7 +6,7 @@
 |---|---|---|---|
 | 1. Camera | ESP32-CAM, [`esp32_cam/CameraWebServer`](../esp32_cam/CameraWebServer) | Image | MJPEG stream over Wi-Fi: `http://<ip>:81/stream` |
 | 2. Perception | [`python/face_tracker.py`](../python/face_tracker.py) with MediaPipe Face Landmarker | Stream | OSC `/face`: `present, cx, cy, size` of the largest (closest) face. OSC `/wek/inputs`: 15 expression scores of that face |
-| 3. Classification | Wekinator, [`wekinator/5emotions`](../wekinator/5emotions) | 13 scores | OSC `/wek/outputs`: class 1-5 |
+| 3. Classification | Wekinator, [`wekinator/5emotions`](../wekinator/5emotions) | 15 scores | OSC `/wek/outputs`: class 1-5 |
 | 4. Behaviour | Processing, [`processing/mirror.pde`](../processing/mirror.pde) | Faces and emotion | One serial line, 30 times per second |
 | 5. Actuation | Arduino, [`arduino/mirror/mirror.ino`](../arduino/mirror/mirror.ino) | Serial line | Steppers, servo, LEDs |
 
@@ -49,7 +49,7 @@ The course example passed one Wekinator class from Processing to the Arduino. On
 
 | Part | Addition |
 |---|---|
-| Perception | A MediaPipe tracker that picks the closest face and sends 13 blendshape scores, and a preview that scales to the frame size. The ESP32-CAM is mounted upside down, so its image is turned 180° first (`ROTATE_MIRROR_CAMERA`) |
+| Perception | A MediaPipe tracker that picks the closest face and sends 15 blendshape scores, and a preview that scales to the frame size. The ESP32-CAM is mounted upside down, so its image is turned 180° first (`ROTATE_MIRROR_CAMERA`) |
 | Calm tracking | A centre box in the image: the mirror rests while the face stays inside it |
 | Machine learning | A 5-class classifier trained on facial blendshapes instead of mouse position |
 | Behaviour | The closed loop, the 5-state machine, optics-based convexity, and smooth fades |
