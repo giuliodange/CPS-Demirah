@@ -53,6 +53,8 @@ ESP32-CAM -> Python + MediaPipe -> Wekinator -> Processing -> Arduino -> motors,
 | `RECEIVED` is frozen | Another program is using port 12000 |
 | The twin turns away from the face | Wrong sign: see [calibration.md](calibration.md), step 3 |
 | The twin wobbles around the face | `CLOSED_LOOP_GAIN` is too high (calibration step 5) |
+| The real mirror overshoots, but the twin does not | `X_MAX_DEG_PER_S` or `Y_MAX_DEG_PER_S` is higher than the motor's real speed (calibration step 5) |
+| The head never reaches the top | `Y_MAX_DEG` differs between `mirror.ino` and `mirror.pde`, or Y loses steps while lifting: lower `ACCEL_Y` |
 
 ## 5. Does the Arduino accept the line?
 
@@ -73,10 +75,10 @@ ESP32-CAM -> Python + MediaPipe -> Wekinator -> Processing -> Arduino -> motors,
 
 | Symptom | Fix |
 |---|---|
-| The driver's LEDs blink, but the motor doesn't turn | The motor cable isn't plugged into `J1`, the supply is too weak, or `MAX_SPEED` is too high |
+| The driver's LEDs blink, but the motor doesn't turn | The motor cable isn't plugged into `J1`, the supply is too weak, or `MAX_SPEED_X` / `MAX_SPEED_Y` is too high |
 | The driver's LEDs stay off | Check the shared GND, the `IN` wires and the driver's supply |
 | The motor buzzes | The `IN` wires are in the wrong order, or the speed is too high |
-| The base doesn't return to its mark | It is losing steps: lower `MAX_SPEED` and `ACCEL` |
+| The base doesn't return to its mark | It is losing steps: lower `MAX_SPEED_X` and `ACCEL_X` |
 | The servo trembles | Test it without the mirror. If it is still, it is the load. If it still trembles, it is the 5 V supply |
 | The servo twitches when the LEDs change | Should not happen: the servo pulse is made by the timer TCA0 in hardware, so `strip.show()` cannot stretch it. Check that `servoBegin()` is called and the signal is on D9 |
 | The LEDs are dark | The data wire must go to `Din`, not `DO`. Check the 330 Ω resistor and the shared GND |

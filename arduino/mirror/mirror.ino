@@ -40,15 +40,20 @@ const float STEPS_PER_DEG_Y = 250;  // Steps per degree of tilt. TODO CALIBRATE 
 
 // --- Safety limits: never past these, whatever arrives. Keep them the same as in mirror.pde ---
 const float X_MIN_DEG = -80, X_MAX_DEG = 80;// Degrees. TODO CALIBRATE
-const float Y_MIN_DEG = 0, Y_MAX_DEG = 20;    // Degrees. 0 = head at rest, all the way down. Y_MAX_DEG: TODO CALIBRATE
+const float Y_MIN_DEG = 0, Y_MAX_DEG = 30;    // Degrees. 0 = head at rest, all the way down. Y_MAX_DEG: TODO CALIBRATE
 
 // --- Stepper motion: higher = more reactive, but too high and the motor skips steps ---
-const float MAX_SPEED = 800;   // Steps per second. The 28BYJ-48 reaches at most about 1024. TODO CALIBRATE (docs/calibration.md, step 5)
-const float ACCEL = 2000;      // Steps per second, per second. TODO CALIBRATE (docs/calibration.md, step 5)
+// The two axes have different motors and mechanisms, so each has its own speed.
+// Keep X_MAX_DEG_PER_S and Y_MAX_DEG_PER_S in mirror.pde = MAX_SPEED / STEPS_PER_DEG.
+const float MAX_SPEED_X = 800;   // Steps per second. TODO CALIBRATE (docs/calibration.md, step 5)
+const float ACCEL_X = 2000;      // Steps per second, per second. TODO CALIBRATE (docs/calibration.md, step 5)
+const float MAX_SPEED_Y = 1000;  // Steps per second. The 28BYJ-48 reaches at most about 1024. TODO CALIBRATE (docs/calibration.md, step 5)
+const float ACCEL_Y = 1500;      // Steps per second, per second. Lower if it skips steps while lifting. TODO CALIBRATE
 
 // --- Saving power ---
 const unsigned long IDLE_DISABLE_MS = 2000;  // Milliseconds stopped before the coils switch off.
-const bool KEEP_Y_POWERED = false;           // true = Y coils always on. TODO CALIBRATE: set it if the mirror sinks when they are off.
+const bool KEEP_Y_POWERED = true;            // true = Y coils always on. Gravity pulls the head down: with the coils off it
+                                             // can sink, and then the code no longer knows where it is.
 
 // --- Convexity servo. A servo reads a pulse length: about 1500 microseconds is its centre ---
 const int SERVO_FLAT_US = 1500;      // Pulse for a flat mirror (c = 0). TODO CALIBRATE
@@ -78,10 +83,10 @@ unsigned long lastMoveX = 0, lastMoveY = 0;
 void setup() {
   Serial.begin(115200);
 
-  stepperX.setMaxSpeed(MAX_SPEED);
-  stepperX.setAcceleration(ACCEL);
-  stepperY.setMaxSpeed(MAX_SPEED);
-  stepperY.setAcceleration(ACCEL);
+  stepperX.setMaxSpeed(MAX_SPEED_X);
+  stepperX.setAcceleration(ACCEL_X);
+  stepperY.setMaxSpeed(MAX_SPEED_Y);
+  stepperY.setAcceleration(ACCEL_Y);
 
   servoBegin(servoUs);
 

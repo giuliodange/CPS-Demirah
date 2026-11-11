@@ -33,7 +33,7 @@ Do the steps **in order**: each one relies on the ones before. Every value to me
 | `X_MIN_DEG`, `X_MAX_DEG`, `Y_MAX_DEG` | Positions from step 1 ÷ `STEPS_PER_DEG`. Use **the same values in `mirror.pde`**. `Y_MIN_DEG` stays 0 |
 | `Y_LEVEL_DEG` (`mirror.pde`) | The tilt, from 0, where the mirror looks straight ahead (inclinometer at 0°). Idle rests here |
 
-**Check:** upload `mirror.ino`, then send `30,0,0,0,0,0,0,0` from the Serial Monitor. The base must turn 30°. Then send `0,0,0,0,0,0,0,0`: it must return to the tape mark. If it doesn't, it is losing steps, so lower `MAX_SPEED` and `ACCEL`.
+**Check:** upload `mirror.ino`, then send `30,0,0,0,0,0,0,0` from the Serial Monitor. The base must turn 30°. Then send `0,0,0,0,0,0,0,0`: it must return to the tape mark. If it doesn't, it is losing steps, so lower `MAX_SPEED_X` and `ACCEL_X`.
 
 ## Step 3: Directions
 
@@ -50,8 +50,8 @@ In a closed loop this only changes the **speed**, not where the mirror stops: to
 
 Change one value at a time:
 
-1. **`MAX_SPEED`, `ACCEL`** (`mirror.ino`): raise them until a quick move skips steps, then go back about 20%.
-2. **`CLOSED_LOOP_GAIN`** (`mirror.pde`): start at 0.3. Take a quick step sideways, and raise the gain by 0.1 at a time until the mirror overshoots and swings back. Then go back 0.1-0.2.
+1. **`MAX_SPEED_X`, `ACCEL_X`, `MAX_SPEED_Y`, `ACCEL_Y`** (`mirror.ino`): raise them until a quick move skips steps, then go back about 20%. Then set `X_MAX_DEG_PER_S` and `Y_MAX_DEG_PER_S` in `mirror.pde` to `MAX_SPEED ÷ STEPS_PER_DEG` of each axis, so Processing never asks for more speed than the motor has (otherwise the loop overshoots).
+2. **`CLOSED_LOOP_GAIN`** (`mirror.pde`): start at 0.35. Take a quick step sideways, and raise the gain by 0.1 at a time until the mirror overshoots and swings back. Then go back 0.1-0.2.
 3. **`DEAD_ZONE_DEG`:** stand still. If the mirror keeps correcting, raise it by 0.5 at a time until it stays still.
 4. **`XY_SMOOTHING`:** 0.3 is reactive. If the motion is jerky, use 0.2.
 
@@ -76,4 +76,4 @@ Change one value at a time:
 
    Any of these means the 5 V supply is sagging, so lower `MAX_BRIGHTNESS`.
 
-`KEEP_Y_POWERED`: lift the head and type `d`. If the head sinks, set `KEEP_Y_POWERED = true`.
+`KEEP_Y_POWERED` is `true`, because gravity pulls the head down and a sunk head makes the code lose its position. To test `false`: lift the head and type `d`. Only if the head stays put can the Y coils switch off when idle.

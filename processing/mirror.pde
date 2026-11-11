@@ -47,13 +47,15 @@ final boolean INVERT_Y = false;        // Same, for the tilt.
 // --- Rotation and tilt: tuned to be reactive ---
 final float CAMERA_HFOV_DEG = 55;      // Degrees the camera on the mirror sees across its width. TODO CALIBRATE (docs/calibration.md, step 4)
 final float CAMERA_VFOV_DEG = 42;      // Degrees it sees across its height. TODO CALIBRATE (docs/calibration.md, step 4)
-final float CLOSED_LOOP_GAIN = 0.5;    // 0 to 1. Share of the face's offset corrected at each camera frame. Too high = it wobbles. (docs/calibration.md, step 5)
+final float CLOSED_LOOP_GAIN = 0.35;   // 0 to 1. Share of the face's offset corrected at each camera frame. Too high = it wobbles. (docs/calibration.md, step 5)
 final float DEAD_ZONE_DEG = 2;         // Degrees. A face this close to the centre counts as centred. (docs/calibration.md, step 5)
 final float XY_SMOOTHING = 0.3;        // 0 to 1. Fraction of the remaining distance covered each frame: higher = more reactive. (docs/calibration.md, step 5)
 final float X_MIN_DEG = -80;           // Degrees. TODO CALIBRATE: keep the same as in mirror.ino.
 final float X_MAX_DEG = 80;            // Degrees. TODO CALIBRATE
 final float Y_MIN_DEG = 0;             // Degrees. 0 = the head at rest, all the way down (cord slack). Keep it 0.
-final float Y_MAX_DEG = 20;            // Degrees. Highest tilt the cord can pull the head to. TODO CALIBRATE: keep the same as in mirror.ino.
+final float Y_MAX_DEG = 30;            // Degrees. Highest tilt the cord can pull the head to. TODO CALIBRATE: keep the same as in mirror.ino.
+final float X_MAX_DEG_PER_S = 16;      // Fastest the base turns: MAX_SPEED_X / STEPS_PER_DEG_X in mirror.ino (800 / 50). Keep them in step.
+final float Y_MAX_DEG_PER_S = 4;       // Fastest the head tilts: MAX_SPEED_Y / STEPS_PER_DEG_Y in mirror.ino (1000 / 250). Keep them in step.
 final float Y_LEVEL_DEG = 15;          // Degrees. The tilt where the mirror looks straight ahead: idle rests here. TODO CALIBRATE (docs/calibration.md, step 2)
 
 // --- States ---
@@ -120,6 +122,7 @@ float nodAmount = 0, nodY = 0;             // The small wink nod: how much (0 to
 String emotion = "neutral";                // The emotion shown, once Wekinator has held it for EMOTION_HOLD_S.
 float greetCenterX = 0, greetCenterY = 0;  // Where the happy circles are drawn around.
 float[] shyX = {0, 0}, shyY = {0, 0};      // Where the two people are, in mirror degrees. [0] = left, [1] = right.
+int lastMotionMs = 0;                      // When updateMotion() last ran, to limit the speed.
 int shyFirst = 0;                          // The person the shy sweep starts from: the one it was looking at.
 float ledRed = 0, ledGreen = 0, ledBlue = 0;  // The solid colour now: drawn and sent.
 float rainbowPhase = 0;                    // 0 to 1: how far the rainbow has turned. Sent.
@@ -353,8 +356,12 @@ void updateMotion() {
   // Each frame, cover a fraction of the remaining distance: quickly while following one person,
   // slowly when shy, when it gets sad and when it goes back to rest, so those moves look calm.
   float smoothing = state.equals("sad") || state.equals("idle") || state.equals("shy") ? GENTLE_SMOOTHING : XY_SMOOTHING;
-  angleX += (targetX - angleX) * smoothing;
-  angleY += (targetY - angleY) * smoothing;
+  // Never ask for more speed than the motors have. Otherwise the angle here runs ahead of the real
+  // mirror, the camera still sees the face off-centre, the loop adds more correction, and it overshoots.
+  float dt = (millis() - lastMotionMs) / 1000.0;
+  lastMotionMs = millis();
+  angleX += constrain((targetX - angleX) * smoothing, -X_MAX_DEG_PER_S * dt, X_MAX_DEG_PER_S * dt);
+  angleY += constrain((targetY - angleY) * smoothing, -Y_MAX_DEG_PER_S * dt, Y_MAX_DEG_PER_S * dt);
 
   // After a wink, a small up-and-down nod on top of the tilt. It fades in and out, so it never jumps.
   boolean winking = state.equals("tracking") && emotion.equals("wink");
