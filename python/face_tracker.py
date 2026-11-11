@@ -14,6 +14,7 @@ Press q in the preview window to quit.
 """
 
 import sys
+import time
 from pathlib import Path
 
 import cv2
@@ -23,9 +24,6 @@ from pythonosc.udp_client import SimpleUDPClient
 
 # ============================== CONFIG ==============================
 MIRROR_CAMERA = "http://172.20.10.4:81/stream"  # The ESP32-CAM on the mirror. Its address is printed in its Serial Monitor.
-LAPTOP_CAMERA = 0       # The computer's own camera. Used with --laptop; set INPUT = "laptop camera" in mirror.pde.
-USE_LAPTOP = "--laptop" in sys.argv
-CAMERA_INDEX = LAPTOP_CAMERA if USE_LAPTOP else MIRROR_CAMERA
 ROTATE_MIRROR_CAMERA = True  # The ESP32-CAM is mounted upside down: turn its image 180 degrees before anything else.
 MIRROR_IMAGE = True     # Flip the image like a selfie, so cx grows when the person moves to THEIR right.
 MAX_FACES = 4           # How many faces MediaPipe looks for. The two largest are sent.
@@ -47,6 +45,10 @@ BLENDSHAPES_TO_SEND = [
 ]
 # ====================================================================
 
+# With --laptop, use the computer's own camera (number 0) instead: set INPUT = "laptop camera" in mirror.pde.
+USE_LAPTOP = "--laptop" in sys.argv
+CAMERA = 0 if USE_LAPTOP else MIRROR_CAMERA
+
 model_file = str(Path(__file__).with_name("face_landmarker.task"))
 landmarker = vision.FaceLandmarker.create_from_options(vision.FaceLandmarkerOptions(
     base_options=BaseOptions(model_asset_path=model_file),
@@ -57,7 +59,7 @@ landmarker = vision.FaceLandmarker.create_from_options(vision.FaceLandmarkerOpti
 processing = SimpleUDPClient("127.0.0.1", PROCESSING_PORT)
 wekinator = SimpleUDPClient("127.0.0.1", WEKINATOR_PORT)
 
-camera = cv2.VideoCapture(CAMERA_INDEX)
+camera = cv2.VideoCapture(CAMERA)
 if not camera.isOpened():
     sys.exit("Cannot open the camera. For the mirror camera, check its address and the hotspot. "
              "For the laptop camera, allow your terminal app in System Settings > Privacy & Security > Camera.")
@@ -68,7 +70,12 @@ while True:
     # --- 1. Read a frame ---
     got_frame, frame = camera.read()
     if not got_frame:
-        break
+        # The Wi-Fi stream can drop for a moment: wait and connect again, instead of quitting.
+        print("No image from the camera. Trying again...")
+        camera.release()
+        time.sleep(1)
+        camera = cv2.VideoCapture(CAMERA)
+        continue
     if ROTATE_MIRROR_CAMERA and not USE_LAPTOP:
         frame = cv2.rotate(frame, cv2.ROTATE_180)
     if MIRROR_IMAGE:

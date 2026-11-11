@@ -49,7 +49,7 @@ The course example passed one Wekinator class from Processing to the Arduino. On
 | Part | Addition |
 |---|---|
 | Perception | A MediaPipe tracker that finds two faces and sends 15 blendshape scores, and a preview that scales to the frame size. The ESP32-CAM is mounted upside down, so its image is turned 180° first (`ROTATE_MIRROR_CAMERA`) |
-| Two people | The shy state rests on one face for `SHY_HOLD_S`, then glances to the other over `SHY_GLANCE_S` on an ease-in-out curve, with slow smoothing, so it never jumps |
+| Two people | The shy state sweeps between the two remembered faces on a cosine curve (`SHY_SWEEP_S`), with slow smoothing, so it lingers on each person and never jumps |
 | Machine learning | A 5-class classifier trained on facial blendshapes instead of mouse position |
 | Behaviour | The closed loop, the 5-state machine, optics-based convexity, and smooth fades |
 | Simulation | Three input modes (`mirror camera`, `laptop camera`, `mouse`) to test without hardware |
@@ -64,4 +64,4 @@ The course example passed one Wekinator class from Processing to the Arduino. On
 
 ## Settings
 
-Every value you can change is in the `CONFIG` block at the top of each file, with its unit and purpose. Values still to be measured are marked `TODO CALIBRATE`, with the step of [calibration.md](calibration.md) that covers them.
+Every value you can change is at the top of each file, with its unit and purpose. In `mirror.ino` and `mirror.pde` they are grouped by how often you touch them: **setup** (every start), **calibrate** (measured once on the real mirror, see [calibration.md](calibration.md)) and **tune** (how the mirror behaves). Five calibrated values live in both files; when Processing connects, the Arduino prints its own so they can be compared.

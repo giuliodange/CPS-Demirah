@@ -24,7 +24,7 @@ final float PERSON_DISTANCE = 600;   // How far away the red ball is drawn. Only
 // the shape: the drawing passes smoothly through every point. The last height is JOINT_HEIGHT.
 // Above about 220 mm it must stay thin: when the mirror looks down, its lower edge swings back
 // and down towards the column. With these values and MIRROR_OFFSET = 150 it stays about 9 mm
-// clear at the full 30 degrees down. Check again if you change either.
+// clear at 30 degrees down. Check again if you change either.
 final float[][] COLUMN_PROFILE = {
   {0, 125}, {40, 120}, {110, 98}, {160, 85}, {195, 60}, {225, 22}, {260, 14}, {400, 12}, {480, 14}
 };

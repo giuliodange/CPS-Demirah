@@ -1,13 +1,13 @@
 /*
   calibration: test the hardware by hand from the Serial Monitor, without Processing.
-  Use it to find the values marked TODO CALIBRATE in mirror.ino. The README explains
-  the procedure, step by step.
+  Use it to find the values in the CALIBRATE block of mirror.ino. docs/calibration.md
+  explains the procedure, step by step.
 
   Serial Monitor: 115200 baud, line ending "Newline". Type a letter, then any numbers.
 
     x 100       move stepper X (rotation) by 100 steps (negative = other way)
     y 100       move stepper Y (tilt) by 100 steps (positive should lift the head, negative = other way)
-    p           print the current positions
+    p           print the current positions (also printed by itself when a move ends)
     z           call the current positions 0
     s 1500      send the convexity servo a 1500 microsecond pulse (about 1000 to 2000)
     l 255 0 0   set all LEDs to red, green, blue (l 0 0 0 = off)
@@ -36,6 +36,7 @@ const int MAX_BRIGHTNESS = 60;     // 0 to 255. Keeps the LEDs inside the power 
 AccelStepper stepperX(AccelStepper::HALF4WIRE, PIN_X_IN1, PIN_X_IN3, PIN_X_IN2, PIN_X_IN4);
 AccelStepper stepperY(AccelStepper::HALF4WIRE, PIN_Y_IN1, PIN_Y_IN3, PIN_Y_IN2, PIN_Y_IN4);
 Adafruit_NeoPixel strip(NUM_LEDS, PIN_LEDS, NEO_GRB + NEO_KHZ800);
+bool moving = false;
 
 void setup() {
   Serial.begin(115200);
@@ -89,16 +90,27 @@ void loop() {
       stepperX.disableOutputs();
       stepperY.disableOutputs();
     } else if (command == 'p') {
-      Serial.print("X: ");
-      Serial.print(stepperX.currentPosition());
-      Serial.print(" steps, Y: ");
-      Serial.print(stepperY.currentPosition());
-      Serial.println(" steps");
+      printPositions();
     }
   }
 
   stepperX.run();
   stepperY.run();
+
+  // Print the positions when a move ends, so there is no need to ask with p.
+  bool movingNow = stepperX.distanceToGo() != 0 || stepperY.distanceToGo() != 0;
+  if (moving && !movingNow) {
+    printPositions();
+  }
+  moving = movingNow;
+}
+
+void printPositions() {
+  Serial.print("X: ");
+  Serial.print(stepperX.currentPosition());
+  Serial.print(" steps, Y: ");
+  Serial.print(stepperY.currentPosition());
+  Serial.println(" steps");
 }
 
 // The same servo pulse as mirror.ino (see the comment there), so calibrated values carry over:
