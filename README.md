@@ -49,7 +49,7 @@ The camera turns with the mirror, so the offset of the face from the centre of t
 | [Mechanical design](docs/mechanical.md) | Mechanisms, specifications, materials, assembly in 10 steps, design process |
 | [Hardware design](docs/hardware.md) | Components, schematic, safety, power consumption |
 | [Software design](docs/software.md) | Pipeline and why, key algorithms, sources |
-| [Machine learning](docs/machine-learning.md) | Data, model, evaluation, training steps, improvements |
+| [Machine learning](docs/machine-learning.md) | Software, choices, training data, training steps |
 | [Calibration and troubleshooting](docs/calibration.md) | Setting up a new build, and finding a fault |
 
 ## Repository
@@ -60,7 +60,7 @@ The camera turns with the mirror, so the offset of the face from the centre of t
 | [`processing/`](processing) | `mirror.pde`: the behaviour. `twin.pde`: the on-screen simulation |
 | [`arduino/`](arduino) | `mirror/`: the sketch that runs the mirror. `calibration/`: a test sketch used only while building |
 | [`esp32_cam/`](esp32_cam) | The camera's streaming sketch |
-| [`tools/`](tools) | Scripts that draw the diagrams and evaluate the model |
+| [`tools/`](tools) | Scripts that draw the diagrams |
 | [`docs/`](docs) | Documentation and images |
 
 ## Running it
@@ -80,7 +80,7 @@ The system then runs without intervention.
 
 ### Training the model
 
-The trained Wekinator project is not in the repository: the brief asks only for its key parameters. The steps to train it are in [machine-learning.md](docs/machine-learning.md#training-and-running-the-model).
+The trained Wekinator project is not in the repository: the brief asks only for its key parameters. The steps to train it are in [machine-learning.md](docs/machine-learning.md).
 
 ### Simulation
 
