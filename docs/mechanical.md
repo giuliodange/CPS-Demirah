@@ -30,7 +30,7 @@ The mirror has three degrees of freedom, each with its own actuator.
 | Tilt resolution and speed | 250 steps per degree, up to 2.8° per second |
 | Surface | From concave to convex, driven by a 1000 µs change of the servo pulse |
 | Reaction time | A new expression shows after it has held for 0.3 s (`EMOTION_HOLD_S`) |
-| Size | Fits the 605 × 370 × 280 mm project box (TODO: add the measured size) |
+| Size | Fits the 605 × 370 × 280 mm project box |
 
 The tilt speed is limited by the reduction: 250 steps per degree gives a small 5 V stepper enough torque to lift the head, at the cost of speed. All values are set in the `CALIBRATE` block of [`mirror.ino`](../arduino/mirror/mirror.ino) and were measured with the procedure in [calibration.md](calibration.md).
 
@@ -38,13 +38,13 @@ The tilt speed is limited by the reduction: 250 steps per degree gives a small 5
 
 | Part | Material and process | Why |
 |---|---|---|
-| Base | 3D-printed (TODO: filament) | Hides stepper X, the bearing and the electronics. Printing gives the exact seats for the motor and the bearing races |
-| Bearing | Two printed races and steel balls (TODO: number and diameter) | A bearing of this diameter is not a stock part. Printing it into the base costs almost nothing |
+| Base | 3D-printed PLA | Hides stepper X, the bearing and the electronics. Printing gives the exact seats for the motor and the bearing races |
+| Bearing | Two printed races and 5mm steel balls | A bearing of this diameter is not a stock part. Printing it into the base costs almost nothing |
 | Body | 3D-printed, one curved piece | The organic shape and the internal cord channel cannot be laser-cut. Its openings hold the two pulleys and keep it light |
 | Head | 3D-printed | Carries the mirror, the rack, the servo and the camera in one part, which keeps them aligned |
 | Mirror frame | Laser-cut acrylic ring | A clean, exact circle that clamps the rim of the mirror, and diffuses the LEDs hidden behind it |
-| Mirror | Flexible mirror sheet (TODO: material and thickness) | It must bend without breaking, thousands of times |
-| Cord | TODO: type | Low stretch, so the tilt angle stays repeatable |
+| Mirror | 2mm Flexible mirror sheet | It must bend without breaking, thousands of times |
+| Cord | Light weight string | Low stretch, so the tilt angle stays repeatable |
 
 The printed and cut parts can be reproduced from the CAD files in [`cad/`](../cad) (TODO: add the files), and put together by following [assembly.md](assembly.md).
 
@@ -62,6 +62,7 @@ Earlier versions, and what each one taught us.
 
 | Prototype | What we learned |
 |---|---|
-| ![Prototype 1](media/process/prototype-1.jpg) | TODO: one line. For example: the first mechanism test, and what did not work |
-| ![Prototype 2](media/process/prototype-2.jpg) | TODO: one line. For example: what changed between the first and the second version |
+| ![Prototype 1](media/process/prototype-1.jpg) | Firs rudimental proof of concept. The two arms were making the structure too heavy |
+| ![Prototype 2](media/process/prototype-2.jpg) | Wooden version of the final prototype, too heavy for the stepper motors |
 | ![Prototype 3](media/process/prototype-3.jpg) | The full structure before the mirror and LEDs were fitted. It confirmed that both steppers could move the body from inside the base |
+
