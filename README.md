@@ -17,6 +17,7 @@ Demirah is a motorised mirror controlled by the user's face. A camera on the mir
 
 **Video of the demo:** 
 https://github.com/user-attachments/assets/8ac95647-eb48-4d14-bd92-ed94be892471
+![Demo video](docs/images/demo_video.mov)
 ## Interaction
 
 The input is the position and expression of the user's face. The output is movement on three axes (rotation, tilt, surface curvature) and the colour of 75 LEDs. The user only needs to stand in front of the mirror, within 1 m.
