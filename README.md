@@ -13,7 +13,9 @@ Demirah is a motorised mirror controlled by the user's face. A camera on the mir
 |---|---|---|---|
 | ![Front](docs/images/product-front.jpg) | ![Right](docs/images/product-right.jpg) | ![Left](docs/images/product-left.jpg) | ![Back](docs/images/product-back.jpg) |
 
-**Video of the demo:** TODO, add the link.
+**Video of the demo:** 
+
+
 
 ## Interaction
 
