@@ -5,10 +5,6 @@
 
 Demirah is a motorised mirror controlled by the user's face. A camera on the mirror tracks the face, and a machine learning model classifies its expression. The mirror rotates and tilts to keep the face centred, and changes the curvature of its surface and the colour of its LED ring according to the expression.
 
-| Spinning view | Exploded view |
-|---|---|
-| ![Spinning view](docs/images/spin.gif) | ![Exploded view](docs/images/exploded.gif) |
-
 | Front | Right | Left | Back |
 |---|---|---|---|
 | ![Front](docs/images/product-front.jpg) | ![Right](docs/images/product-right.jpg) | ![Left](docs/images/product-left.jpg) | ![Back](docs/images/product-back.jpg) |
@@ -46,7 +42,7 @@ The camera turns with the mirror, so the offset of the face from the centre of t
 
 | Document | Contents |
 |---|---|
-| [Mechanical design](docs/mechanical.md) | Mechanisms, specifications, materials, assembly in 10 steps, design process |
+| [Mechanical design](docs/mechanical.md) | Mechanisms, specifications, materials, exploded view, design process |
 | [Hardware design](docs/hardware.md) | Components, schematic, safety, power consumption |
 | [Software design](docs/software.md) | Pipeline and why, key algorithms, sources |
 | [Machine learning](docs/machine-learning.md) | Software, choices, training data, training steps |

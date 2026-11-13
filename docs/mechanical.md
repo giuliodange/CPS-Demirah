@@ -40,17 +40,10 @@ There are no end stops: the position at power-on counts as zero, and software li
 | Cord | Lightweight string | Low stretch, so the tilt stays repeatable |
 
 ## Assembly
-Disclaimer: the pictures are AI-generated and ment to be just a reference.
 
-| | |
-|---|---|
-| **1. Base and bearing** ![Step 1](images/step-01.jpg) Place the lower bearing ring in the base and fill its groove with the steel balls. | **2. Stepper X** ![Step 2](images/step-02.jpg) Fix stepper X in its seat, shaft up at the centre. |
-| **3. Turntable** ![Step 3](images/step-03.jpg) Lower the upper ring onto the balls and couple it to the shaft. It must spin freely by hand. | **4. Electronics** ![Step 4](images/step-04.jpg) Fix the Arduino, both drivers and the power board in the base. |
-| **5. Body** ![Step 5](images/step-05.jpg) Fix the body to the turntable, with the head cables through its centre. | **6. Stepper Y and cord** ![Step 6](images/step-06.jpg) Fit stepper Y and its spool, and thread the cord over the two pulleys. |
-| **7. Head** ![Step 7](images/step-07.jpg) Mount the head on its joint and tie the cord to it. | **8. Servo and rack** ![Step 8](images/step-08.jpg) Fix the servo in the head, with the rack pointing at the centre of the mirror. |
-| **9. Mirror and LED ring** ![Step 9](images/step-09.jpg) Lay the LEDs in the ring, place the mirror and clamp its rim. | **10. Camera and wiring** ![Step 10](images/step-10.jpg) Fix the ESP32-CAM on the head and wire everything as in the [schematic](hardware.md#schematic). |
+![Exploded view](images/exploded-view.jpg)
 
-Then set the limits and speeds with [calibration.md](calibration.md).
+The base holds the bearing, stepper X and all the electronics. The body sits on the turntable and carries stepper Y's cord over two pulleys to the head. The head holds the servo and rack, the mirror in its LED ring, and the ESP32-CAM. Wire the parts as in the [schematic](hardware.md#schematic), then set the limits and speeds with [calibration.md](calibration.md).
 
 ## Design process
 
