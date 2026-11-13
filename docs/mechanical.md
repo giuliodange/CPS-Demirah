@@ -40,6 +40,7 @@ There are no end stops: the position at power-on counts as zero, and software li
 | Cord | Lightweight string | Low stretch, so the tilt stays repeatable |
 
 ## Assembly
+!Disclaimer: the pictures are AI-generated and ment to be just a reference.
 
 | | |
 |---|---|
