@@ -3,7 +3,7 @@
 **Cyber Physical Systems, IDE 2026-27 (Imperial College London / Royal College of Art)**  
 *Ruoxin Chen, Indiana Gothard, Giulio d'Angelantonio*
 
-Demirah is a mirror that behaves like a small creature. It turns to face you, greets you, and answers your expression with light and with the shape of its own surface. When you leave, it lowers its head and goes back to rest.
+Demirah is a motorised mirror controlled by the user's face. A camera on the mirror tracks the face, and a machine learning model classifies its expression. The mirror rotates and tilts to keep the face centred, and changes the curvature of its surface and the colour of its LED ring according to the expression.
 
 | Spinning view | Exploded view |
 |---|---|
@@ -19,53 +19,47 @@ Demirah is a mirror that behaves like a small creature. It turns to face you, gr
 
 ## Concept
 
-A normal mirror is passive: it shows you and does nothing. Demirah gives the reflection a will of its own. The input is your **face**: where it is and what it expresses. The output is **movement**: the mirror turns and tilts to keep you in view, and bends its surface so that your own reflection changes with your mood.
+**Input:** the position and the expression of the user's face, read by a camera mounted on the mirror.
+**Output:** mechanical movement on three axes (rotation, tilt, surface curvature), plus the colour of 75 LEDs.
 
-The input and the output are the same object. You look at a mirror to see your face, so the face is the natural way to control it, and the answer appears in the place you are already looking.
+The input and the output are on the same object: the user looks at the mirror, the camera on the mirror reads the face, and the response appears in the reflection. No other controller or instruction is needed, and the user stays within 1 m of the mirror.
 
 ### Interaction
 
-| You | The mirror | Why |
+| User input | System response | Justification |
 |---|---|---|
-| Walk up to it | Draws one happy circle with its head. LEDs turn yellow | A greeting shows it has noticed you before anything else happens |
-| Move around | Turns and tilts to follow your face. It rests while you stay near the centre | Following proves it is looking at *you*. Resting for small movements keeps it calm, not nervous |
-| Keep a neutral face | White LEDs, flat surface | A plain mirror: the baseline that every reaction is compared with |
-| Smile | Yellow LEDs, the surface goes concave | A concave mirror magnifies, so your smile grows |
-| Wink | Green LEDs, one quick push of the surface | A wink is short, so the answer is one short gesture: the mirror winks back |
-| Look amazed | Rainbow LEDs, the surface pulses in and out | The most surprised face gets the most lively answer |
-| Walk away | Lowers its head, blue light fades out, then it returns to rest | It makes the end of the interaction visible, and invites you back |
+| A face enters the camera image | The head traces one circle (2 s). LEDs turn yellow | Confirms that the face was detected before tracking starts |
+| The face moves | The mirror rotates and tilts until the face is centred in the image. It does not move while the face stays inside a centre box (30% of the image) | Keeps the user in the reflection. The centre box prevents continuous small corrections |
+| Neutral expression | White LEDs, flat surface | The reference state: an ordinary flat mirror |
+| Smile | Yellow LEDs, the surface becomes concave | A concave mirror magnifies the reflection, so the response is visible in the image itself |
+| Wink | Green LEDs, one short push of the surface (0.35 s) | A short input gets a short, single response |
+| Amazed expression (raised eyebrows) | Rainbow LEDs, the surface oscillates between concave and convex (4 s period) | The largest expression gets the largest movement of the surface |
+| No face for 3 s | The head tilts fully down, the LEDs fade from blue to off, and the mirror returns to idle | Shows that tracking has stopped, and resets the system for the next user |
 
-Every reaction happens within a second, and each one can be repeated as often as you like, so people discover the expressions by trying.
+An expression is shown after the classifier has reported it for 0.3 s. Every response can be repeated without resetting anything.
 
 ### Materials and construction
 
-| Choice | How it supports the concept |
+| Choice | Reason |
 |---|---|
-| A round mirror on a slim neck | It reads as a head on a body, so its movements read as gestures |
-| An organic, curved 3D-printed body | Soft shapes make it a creature, not a machine. The motors and electronics are hidden in the base |
-| A flexible mirror, pushed from behind | The surface itself moves, so the reaction happens inside your reflection |
-| LEDs hidden behind an acrylic ring | The light glows around the face like a mood, with no visible lamps |
-| The camera on the head | The mirror "sees" from where it looks, which also makes the tracking simple and exact |
+| Round mirror on a narrow neck, wide base | Low centre of mass: both steppers and all electronics are in the base, so the head can move without tipping the object |
+| 3D-printed curved body | The cord for the tilt runs inside it, so no mechanism or cable is visible from the front |
+| Flexible mirror sheet, pushed at its centre by a rack | The surface is itself an actuator: its curvature changes the reflection optically, with no screen |
+| LEDs behind a laser-cut acrylic ring | The ring clamps the rim of the mirror and diffuses the LEDs into an even band of light |
+| Camera mounted on the head | The camera moves with the mirror, which makes the tracking a closed loop (see below) |
 
 ## How it works
 
-```
-ESP32-CAM on the mirror ~~Wi-Fi~~> face_tracker.py (MediaPipe)
-                                     |- OSC /face --------------------------------> Processing
-                                     '- OSC /wek/inputs -> Wekinator (4 classes) -> Processing
-Processing (behaviour) -- USB serial --> Arduino Nano Every
-                                         -> stepper X (rotation), stepper Y (tilt),
-                                            servo (curvature), 75 LEDs
-```
+![Data flow](docs/pipeline.svg)
 
-The camera turns with the mirror, so the mirror keeps correcting until the face is in the centre of the image. This is a **closed loop**: motor and calibration errors correct themselves.
+The camera turns with the mirror. The offset of the face from the centre of the image is therefore the pointing error, and the mirror moves until that error is zero. This is a **closed loop**: errors in the motors and in the calibration are corrected automatically.
 
 | State | When | What the mirror does |
 |---|---|---|
-| idle | Nobody there | Looks straight ahead. The surface pulses and a rainbow turns around the LEDs |
-| greeting | A face appears | Draws a happy circle. LEDs turn yellow |
+| idle | No face | The head is level. The surface oscillates slowly and a rainbow rotates around the LEDs |
+| greeting | A face appears | The head traces one circle. LEDs turn yellow |
 | tracking | After greeting | Follows the face when it leaves the centre box. LEDs and surface show the expression |
-| sad | The face is gone | Looks down slowly. LEDs fade from blue to dark, then back to idle |
+| sad | No face for 3 s | The head tilts fully down. LEDs fade from blue to off, then back to idle |
 
 ## Documentation
 
@@ -108,11 +102,11 @@ The camera turns with the mirror, so the mirror keeps correcting until the face 
       .venv/bin/python python/face_tracker.py
       ```
 
-From then on the mirror runs by itself: there is nothing to press and no sketch to change.
+After this the system runs without intervention: all states and responses are handled by the one Arduino sketch and the one Processing sketch.
 
 ### Digital simulation
 
-The Processing sketch also draws a simulation of the mirror, used to develop and test the behaviour without the hardware. It is a tool, not the product. To use it, set `SIMULATION_ONLY = true` and `INPUT = "mouse"` in `mirror.pde`: the mouse is the face, and the keys 1-4 are the expressions.
+The Processing sketch also draws a 3D simulation of the mirror from the same values it sends to the Arduino. We used it to develop and test the behaviour without the hardware. It is a development tool, not the product. To use it, set `SIMULATION_ONLY = true` and `INPUT = "mouse"` in `mirror.pde`: the mouse is the face, and the keys 1-4 are the expressions.
 
 | Simulation: idle | Simulation: tracking a smiling face |
 |---|---|

@@ -1,6 +1,6 @@
 # Mechanical design
 
-Demirah is a new mechanical system. It does not reuse the DE-Arm robot arm, because an arm is the wrong shape for a mirror: we needed a head that turns, nods and changes its own surface.
+Demirah is a new mechanical system and does not reuse the DE-Arm robot arm. The task needs two rotation axes that carry a mirror, and a third actuator that deforms the mirror surface. A serial arm with a gripper does not provide these.
 
 | | DE-Arm (starting point) | Demirah |
 |---|---|---|
@@ -32,7 +32,7 @@ The mirror has three degrees of freedom, each with its own actuator.
 | Reaction time | A new expression shows after it has held for 0.3 s (`EMOTION_HOLD_S`) |
 | Size | Fits the 605 × 370 × 280 mm project box (TODO: add the measured size) |
 
-The tilt is slow on purpose. A large reduction lets a small 5 V stepper lift the head, and a slow nod looks calm. All values are set in the `CALIBRATE` block of [`mirror.ino`](../arduino/mirror/mirror.ino) and were measured with the procedure in [calibration.md](calibration.md).
+The tilt speed is limited by the reduction: 250 steps per degree gives a small 5 V stepper enough torque to lift the head, at the cost of speed. All values are set in the `CALIBRATE` block of [`mirror.ino`](../arduino/mirror/mirror.ino) and were measured with the procedure in [calibration.md](calibration.md).
 
 ## Materials and fabrication
 

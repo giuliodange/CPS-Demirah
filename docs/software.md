@@ -63,7 +63,7 @@ The course example passed one Wekinator class from Processing to the Arduino. On
 | Part | Addition |
 |---|---|
 | Perception | A MediaPipe tracker that picks the closest face and sends 15 blendshape scores, and a preview that scales to the frame size. The ESP32-CAM is mounted upside down, so its image is turned 180° first (`ROTATE_MIRROR_CAMERA`) |
-| Calm tracking | A centre box in the image: the mirror rests while the face stays inside it |
+| Centre box | The mirror does not move while the face stays inside a box at the centre of the image, which prevents continuous small corrections |
 | Machine learning | A classifier with 4 expression classes, trained on facial blendshapes instead of mouse position |
 | Behaviour | The closed loop, the 4-state machine, a surface gesture for each expression, and smooth fades |
 | Simulation | Three input modes (`mirror camera`, `laptop camera`, `mouse`) to test without hardware |
