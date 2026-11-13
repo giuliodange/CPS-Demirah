@@ -1,5 +1,5 @@
 """
-circuit_diagram.py: draws docs/circuit.svg, the schematic of the mirror.
+circuit_diagram.py: draws docs/images/circuit.svg, the schematic of the mirror.
 
 Plain Python, no libraries: every symbol, wire and label below is one line of SVG.
 Change a pin or a part here, run `python3 tools/circuit_diagram.py`, and the schematic updates.
@@ -223,6 +223,6 @@ text(TX + 250, TY + 49, "Sheet 1 of 1", 10)
 document = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
             f'font-family="Menlo, Consolas, monospace">'
             f'<rect width="100%" height="100%" fill="#ffffff"/>' + "".join(svg) + "</svg>")
-output = Path(__file__).resolve().parent.parent / "docs" / "circuit.svg"
+output = Path(__file__).resolve().parent.parent / "docs" / "images" / "circuit.svg"
 output.write_text(document, encoding="utf-8")
 print("Written", output)

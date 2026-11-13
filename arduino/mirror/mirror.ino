@@ -27,7 +27,7 @@
 #include <Adafruit_NeoPixel.h>
 
 // ================= 1. CALIBRATE: measured on the real mirror =================
-// Find each value with tools/calibration, following docs/calibration.md.
+// Find each value with arduino/calibration, following docs/calibration.md.
 // Values marked [COPY] must also be written in mirror.pde. At power-on the sketch
 // prints them, and Processing shows them in its console, so you can compare.
 

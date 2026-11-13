@@ -1,100 +1,46 @@
-# Calibration
+# Calibration and troubleshooting
 
-Do the steps **in order**: each one relies on the ones before.
+## Calibration
 
-**Where the values go**
-
-| File | Block | Holds |
-|---|---|---|
-| `arduino/mirror/mirror.ino` | `1. CALIBRATE` | Steps per degree, limits, speeds, servo pulses |
-| `processing/mirror.pde` | `2. CALIBRATE` | A copy of the limits and speeds, plus the camera and convexity values |
-
-Five values live in both files: `X_MIN_DEG`, `X_MAX_DEG`, `Y_MAX_DEG`, `X_MAX_DEG_PER_S` and `Y_MAX_DEG_PER_S`. When Processing connects, the Arduino prints its own in the Processing console:
-
-```
-[Arduino] mirror ready. Copy to mirror.pde: X_MIN_DEG = -80, X_MAX_DEG = 80, Y_MAX_DEG = 30, X_MAX_DEG_PER_S = 16.0, Y_MAX_DEG_PER_S = 2.8
-```
-
-Copy that line's numbers into `mirror.pde` whenever you change `mirror.ino`.
-
-**Tool:** upload [`tools/calibration/calibration.ino`](../tools/calibration/calibration.ino), then open the Serial Monitor at **115200 baud** with the line ending set to **New Line**.
+Needed once for a new build. Upload [`arduino/calibration`](../arduino/calibration/calibration.ino) and open the Serial Monitor at **115200 baud**, line ending **New Line**. This sketch has no limits: start with small moves.
 
 | Command | Action |
 |---|---|
-| `x 100` / `y 100` | Move stepper X or Y by 100 steps. A negative number moves the other way. The new positions are printed when the move ends |
-| `p` | Print both stepper positions |
-| `z` | Call the current positions 0 |
-| `v 700` | Set the top speed of both steppers, in steps per second (it starts at 300) |
+| `x 100`, `y 100` | Move stepper X or Y by 100 steps (negative = other way). The position is printed when it stops |
+| `z` | Call the current position 0 |
+| `v 700` | Set the top speed, in steps per second |
 | `s 1500` | Send the servo a 1500 µs pulse |
-| `l 255 0 0` | Set all LEDs to red, green, blue. `l 0 0 0` turns them off |
-| `d` | Switch the stepper coils off |
+| `l 255 0 0` | Set all LEDs to a colour |
 
-**This sketch has no limits.** Start with small moves (100 steps, or 50 µs on the servo).
+1. **Range.** Put the mirror at rest by hand (base centred, head down) and type `z`. Move each axis to its furthest safe position and note the steps.
+2. **Scale.** Type `x 1000` and measure the angle with tape on the base: `STEPS_PER_DEG_X` = 1000 ÷ angle. Do the same for Y with a phone inclinometer. If positive `y` lowers the head, make `STEPS_PER_DEG_Y` negative.
+3. **Limits.** `X_MIN_DEG`, `X_MAX_DEG`, `Y_MAX_DEG` = the positions from step 1 ÷ steps per degree.
+4. **Speed.** Raise `v` by 100 until a motor buzzes without moving or misses its mark, then use 20% less as `MAX_SPEED_X` and `MAX_SPEED_Y`. Test Y while it lifts the head.
+5. **Servo.** With `s`, find the pulse that leaves the mirror flat (`SERVO_FLAT_US`) and the change to the deepest curve (`SERVO_RANGE_US`).
+6. **Copy to Processing.** Write these values in the `CALIBRATE` block of `mirror.ino` and upload it. When Processing connects, the console shows `[Arduino] mirror ready. Copy to mirror.pde: ...`: copy those five numbers into `mirror.pde`. Also set `Y_LEVEL_DEG`, the tilt at which the mirror looks straight ahead.
+7. **Tracking.** Stand to one side. If the mirror turns away from you, flip `INVERT_X` (or `INVERT_Y` for the tilt). If it overshoots, lower `CLOSED_LOOP_GAIN` by 0.1. If it moves too often, enlarge `CENTRE_BOX_W` and `CENTRE_BOX_H`.
 
-## Step 1: Safe range
+## Troubleshooting
 
-1. Put the mirror at rest by hand: base centred, head all the way down (cord slack).
-2. Type `z`, so that position becomes zero.
-3. Move each axis in small steps up to the furthest safe position, without pulling the cord too far or twisting the cables. Note the positions it prints.
-   - **X** goes both ways from 0: find a limit on each side.
-   - **Y** goes one way only, from 0 (down) to the highest safe tilt. Positive `y` must lift the head. If it lowers it, `STEPS_PER_DEG_Y` will be negative.
-4. For the servo, find the pulse that leaves the mirror flat and the furthest safe pulse, with `s`.
+Follow the data from the camera to the motors. The first check that fails is where the fault is.
 
-## Step 2: Scale (commanded degrees = real degrees)
+| Check | Where | If it fails |
+|---|---|---|
+| The camera streams | `http://<camera-ip>:81/stream` in a browser (close it afterwards: one viewer only) | Hotspot off, wrong IP in `face_tracker.py`, or weak 5 V at the camera |
+| Python sees the face | Green dots in the tracker's preview | Lighting, focus, or `ROTATE_MIRROR_CAMERA` |
+| Wekinator classifies | "OSC In" light green, the class follows your face | Project not in Run, or not 15 inputs |
+| Processing receives | `RECEIVED` and `EMOTION` lines on screen | `INPUT` setting, or OSC port 12000 in use |
+| The simulation moves correctly | The 3D view | A behaviour setting in `mirror.pde` |
+| The Arduino receives | `SENT` line, and `SERIAL` is not "off" | `SERIAL_PORT_NAME`, `SIMULATION_ONLY`, or the Arduino IDE's Serial Monitor is open |
 
-| Value (`mirror.ino`) | How |
+If the simulation is right and the real mirror is not, the fault is in the calibration or the hardware:
+
+| Symptom | Fix |
 |---|---|
-| `STEPS_PER_DEG_X` | Mark the base with tape, type `x 1000` and measure the angle it turns. Then 1000 ÷ angle |
-| `STEPS_PER_DEG_Y` | Type `y 2000` and measure the tilt change with a phone inclinometer. Then 2000 ÷ angle |
-| `X_MIN_DEG`, `X_MAX_DEG`, `Y_MAX_DEG` | Positions from step 1 ÷ `STEPS_PER_DEG`. **Copy to `mirror.pde`** |
-
-Then in `mirror.pde`, set `Y_LEVEL_DEG`: the tilt, in degrees from 0, where the mirror looks straight ahead (inclinometer at 0°). Idle rests there.
-
-**Check:** upload `mirror.ino`, then send `30,0,0,0,0,0,0,0` from the Serial Monitor. The base must turn 30°. Then send `0,0,0,0,0,0,0,0`: it must return to the tape mark. If it doesn't, it is losing steps: see step 5.
-
-## Step 3: Directions
-
-1. **Motor matches the twin.** Run `mirror.pde` with `INPUT = "mouse"` and `SIMULATION_ONLY = false`. If a real axis moves opposite to the twin, make its `STEPS_PER_DEG` negative in `mirror.ino`. Tilt 0 is all the way down, positive tilt is up.
-2. **The loop corrects towards you.** Set `INPUT = "mirror camera"` and stand to one side. If the mirror turns away and runs to a limit, flip `INVERT_X`. Check `INVERT_Y` the same way, standing higher, then lower.
-
-## Step 4: Camera field of view
-
-Hold the camera 1 m from a wall and measure the width it sees. Then `CAMERA_HFOV_DEG` = 2 × atan(width ÷ 2 ÷ 1 m). Do the same with the height for `CAMERA_VFOV_DEG`.
-
-In a closed loop this only changes the **speed**, not where the mirror stops: too high makes it nervous, too low makes it slow. The starting values, 55° and 42°, are typical for the OV2640.
-
-## Step 5: Speed and reactivity
-
-Change one value at a time.
-
-1. **Top speeds** (`mirror.ino`). With `calibration.ino`, start at `v 400` and go up by 100:
-   - **X:** `x 2000`, then `x -2000`. It must return to the tape mark.
-   - **Y:** with the mirror fitted, start at the bottom (`z` there), then `y 2500` (up) and `y -2500` (down). Lifting is the hard part: a stepper gets weaker as it speeds up.
-   - The first speed where a motor buzzes without moving, or does not come back to its mark, is too fast. Use about 20% less for `MAX_SPEED_X` and `MAX_SPEED_Y`. If it still loses steps at the start of a move, lower `ACCEL_X` or `ACCEL_Y`.
-2. **Copy the speeds to `mirror.pde`:** `X_MAX_DEG_PER_S` = `MAX_SPEED_X` ÷ `STEPS_PER_DEG_X`, and the same for Y. The Arduino prints both. If Processing believes the mirror is faster than it is, the tracking overshoots.
-3. **`CLOSED_LOOP_GAIN`** (`mirror.pde`): start at 0.35. Take a quick step sideways. If the mirror overshoots and swings back, lower it by 0.1. If it follows lazily, raise it by 0.1.
-4. **`CENTRE_BOX_W`, `CENTRE_BOX_H`:** the mirror rests while the face is inside this box (shown in the twin's camera view). If it moves too often, make the box bigger. If your face drifts too far off-centre before it reacts, make it smaller.
-5. **`DEAD_ZONE_DEG`:** how close to the centre the mirror brings the face before it rests again. If it hunts around the centre, raise it by 0.5.
-6. **`FAST_SMOOTHING`:** 0.3 is reactive. If the motion is jerky, use 0.2.
-
-## Step 6: Convexity
-
-| Value | How |
-|---|---|
-| `SERVO_FLAT_US` (`mirror.ino`) | With `s`, the pulse that leaves the mirror flat |
-| `SERVO_RANGE_US` (`mirror.ino`) | Pulse for the deepest curve minus the flat pulse, without the sign. Make it negative if the curve goes the wrong way |
-| `MAX_SAG_MM` (`mirror.pde`) | Depth of the deepest curve, in mm |
-
-Then tune the gestures in `mirror.pde`, with `INPUT = "mouse"` and the keys 1-4: `HAPPY_CONVEXITY`, `WINK_PUSH` and `PULSE_AMOUNT` (idle and amazed) set how far each one goes (-1 to +1). If the rack can only push, keep the concave values small.
-
-## Step 7: LEDs and power
-
-1. Type `l 255 255 255` and check that all 75 LEDs light up evenly.
-2. Run the full system for a few minutes and watch for:
-   - the ESP32-CAM restarting (`Brownout` in its Serial Monitor),
-   - weak motors,
-   - the power board reaching its current limit.
-
-   Any of these means the 5 V supply is sagging, so lower `MAX_BRIGHTNESS`.
-
-Stepper Y keeps its coils on all the time, because gravity pulls the head down: it runs warm, which is normal. Stepper X rests 2 s after it stops.
+| An axis moves the wrong way | Make its `STEPS_PER_DEG` negative |
+| The mirror runs away from the face | Flip `INVERT_X` or `INVERT_Y` |
+| It overshoots the face | Check `X_MAX_DEG_PER_S` and `Y_MAX_DEG_PER_S` against the Arduino's line, then lower `CLOSED_LOOP_GAIN` |
+| The head buzzes but does not lift | Lower `MAX_SPEED_Y` and `ACCEL_Y`, and `Y_MAX_DEG_PER_S` with them |
+| It points wrong after a while | A motor lost steps: put the mirror at rest by hand and press reset on the Arduino |
+| The servo does not reach flat, or strains at the end | Adjust `SERVO_FLAT_US`, reduce `SERVO_RANGE_US` |
+| The camera restarts (`Brownout`) | The 5 V supply sags: lower `MAX_BRIGHTNESS` |

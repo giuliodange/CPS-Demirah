@@ -1,5 +1,5 @@
 """
-pipeline_diagram.py: draws docs/pipeline.svg, the block diagram of the data flow.
+pipeline_diagram.py: draws docs/images/pipeline.svg, the block diagram of the data flow.
 
 Plain Python, no libraries, in the same style as the schematic (tools/circuit_diagram.py).
 Run `python3 tools/pipeline_diagram.py` after changing a block or a label.
@@ -73,6 +73,6 @@ text(30, 440, "The camera turns with the mirror, so the loop from camera to moto
 document = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
             f'font-family="Menlo, Consolas, monospace">'
             f'<rect width="100%" height="100%" fill="#ffffff"/>' + "".join(svg) + "</svg>")
-output = Path(__file__).resolve().parent.parent / "docs" / "pipeline.svg"
+output = Path(__file__).resolve().parent.parent / "docs" / "images" / "pipeline.svg"
 output.write_text(document, encoding="utf-8")
 print("Written", output)
