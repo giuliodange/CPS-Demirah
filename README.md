@@ -80,13 +80,7 @@ The system then runs without intervention.
 
 ### Training the model
 
-The trained model is not in the repository: find its key parameters in [machine-learning.md](docs/machine-learning.md). 
-To train it:
-
-1. Run the tracker. It sends 15 expression scores to port 6448 (`/wek/inputs`).
-2. In Wekinator, create a project with **15 inputs**, and **1 output** of type classifier with **4 classes**, sent to port **12000** (`/wek/outputs`). Choose **k-nearest neighbour, k = 1**.
-3. For each class (1 neutral, 2 happy, 3 wink, 4 amazed), press **Start recording**, hold the expression for a few seconds while moving your head and changing distance, then stop. Repeat with every person.
-4. Press **Train**, then **Run**, then start `processing/mirror.pde`. The `EMOTION` line on screen shows the class received.
+The trained Wekinator project is not in the repository: the brief asks only for its key parameters. The steps to train it are in [machine-learning.md](docs/machine-learning.md#training-and-running-the-model).
 
 ### Simulation
 

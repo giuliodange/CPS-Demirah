@@ -48,7 +48,7 @@ text(300, 396, "LAPTOP", 11, "bold", "start")
 
 block(40, 200, 180, 80, "ESP32-CAM", ("camera on the mirror head",))
 block(300, 200, 190, 80, "face_tracker.py", ("Python, MediaPipe", "face position, 15 scores"))
-block(540, 100, 180, 80, "Wekinator", ("k-NN classifier", "4 expression classes"))
+block(540, 100, 180, 80, "Wekinator", ("classifier", "4 expression classes"))
 block(730, 200, 185, 80, "mirror.pde", ("Processing", "states, motion, light"))
 block(1040, 200, 180, 80, "mirror.ino", ("Arduino Nano Every", "executes within limits"))
 
