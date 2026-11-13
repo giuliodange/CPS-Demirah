@@ -45,7 +45,7 @@ An expression is shown after the classifier has reported it for 0.3 s. Every res
 | Round mirror on a narrow neck, wide base | Low centre of mass: both steppers and all electronics are in the base, so the head can move without tipping the object |
 | 3D-printed curved body | The cord for the tilt runs inside it, so no mechanism or cable is visible from the front |
 | Flexible mirror sheet, pushed at its centre by a rack | The surface is itself an actuator: its curvature changes the reflection optically, with no screen |
-| LEDs behind a laser-cut acrylic ring | The ring clamps the rim of the mirror and diffuses the LEDs into an even band of light |
+| LEDs  | The 3D-printed ring clamps to the rim of the mirror and houses the LEDs |
 | Camera mounted on the head | The camera moves with the mirror, which makes the tracking a closed loop (see below) |
 
 ## How it works
