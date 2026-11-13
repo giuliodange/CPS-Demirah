@@ -41,7 +41,9 @@ There are no end stops: the position at power-on counts as zero, and software li
 
 ## Assembly
 
-![Exploded view](images/exploded-view.jpg)
+| Exploded view | Assembled |
+|---|---|
+| ![Exploded view](images/exploded-view.jpg) | ![Assembled view, from the back](images/assembled-view.jpg) |
 
 The base holds the bearing, stepper X and all the electronics. The body sits on the turntable and carries stepper Y's cord over two pulleys to the head. The head holds the servo and rack, the mirror in its LED ring, and the ESP32-CAM. Wire the parts as in the [schematic](hardware.md#schematic), then set the limits and speeds with [calibration.md](calibration.md).
 
