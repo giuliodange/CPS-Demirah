@@ -85,7 +85,7 @@ Change one value at a time.
 | `SERVO_RANGE_US` (`mirror.ino`) | Pulse for the deepest curve minus the flat pulse, without the sign. Make it negative if the curve goes the wrong way |
 | `MAX_SAG_MM` (`mirror.pde`) | Depth of the deepest curve, in mm |
 
-Then tune the gestures in `mirror.pde`, with `INPUT = "mouse"` and the keys 1-4: `HAPPY_CONVEXITY`, `WINK_PUSH` and `AMAZED_PULSE` set how far each one goes (-1 to +1). If the rack can only push, keep the concave values small.
+Then tune the gestures in `mirror.pde`, with `INPUT = "mouse"` and the keys 1-4: `HAPPY_CONVEXITY`, `WINK_PUSH` and `PULSE_AMOUNT` (idle and amazed) set how far each one goes (-1 to +1). If the rack can only push, keep the concave values small.
 
 ## Step 7: LEDs and power
 
@@ -93,7 +93,7 @@ Then tune the gestures in `mirror.pde`, with `INPUT = "mouse"` and the keys 1-4:
 2. Run the full system for a few minutes and watch for:
    - the ESP32-CAM restarting (`Brownout` in its Serial Monitor),
    - weak motors,
-   - the Power Board reaching its current limit.
+   - the power board reaching its current limit.
 
    Any of these means the 5 V supply is sagging, so lower `MAX_BRIGHTNESS`.
 

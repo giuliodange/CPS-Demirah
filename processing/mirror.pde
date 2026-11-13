@@ -13,7 +13,7 @@
                 neutral   white, flat
                 happy     yellow, concave
                 wink      green, one quick push
-                amazed    rainbow, a fast pulse
+                amazed    rainbow, and the curve pulses as in idle
        | no face for NO_FACE_TIMEOUT_S
     sad       it slowly looks down, the LEDs turn SAD_COLOR and fade to dark, then back to idle
               (if a face comes back while sad, it celebrates again)
@@ -39,7 +39,7 @@ final String INPUT = "mirror camera";   // Where the faces come from:
                                         //   "laptop camera" = the computer's camera, for testing (start "Avvia webcam computer")
                                         //   "mouse"         = no camera. Mouse = face, p = present,
                                         //                     1-4 = emotion (neutral, happy, wink, amazed)
-final String SERIAL_PORT_NAME = "/dev/cu.usbmodem11101";  // The Arduino's port, from the list printed in the console.
+final String SERIAL_PORT_NAME = "/dev/cu.usbmodem21101";  // The Arduino's port, from the list printed in the console.
 
 // ================= 2. CALIBRATE: measured on the real mirror (docs/calibration.md) =================
 // Copied from mirror.ino. When Processing connects, the Arduino prints its own values in the
@@ -63,14 +63,14 @@ final float CLOSED_LOOP_GAIN = 0.2;    // 0 to 1. Share of the way to the face c
 final float CENTRE_BOX_W = 0.3;         // 0 to 1. Width of the centre box, as a share of the image. While the face stays
 final float CENTRE_BOX_H = 0.3;         // inside the box, the mirror does not move. Same for the height. Bigger = calmer.
 final float DEAD_ZONE_DEG = 2;          // Degrees. When the face leaves the box, the mirror re-centres it to within this, then rests again.
-final float FAST_SMOOTHING = 0.3;       // 0 to 1. Share of the remaining distance covered each frame, while greeting and tracking.
+final float FAST_SMOOTHING = 0.15;       // 0 to 1. Share of the remaining distance covered each frame, while greeting and tracking.
 final float GENTLE_SMOOTHING = 0.04;    // The same, in the calm states: idle and sad.
 
 // --- States ---
 final float NO_FACE_TIMEOUT_S = 3;      // Seconds without a face before it gets sad.
 final float GREETING_S = 2;             // Seconds the celebration lasts: one happy circle.
 final float GREETING_RADIUS_DEG = 10;   // Degrees. Size of the happy circle.
-final float SAD_S = 2;                  // Seconds it stays sad before going idle. Its blue fades to dark over this time.
+final float SAD_S = 5;                  // Seconds it stays sad before going idle. Its blue fades to dark over this time.
 final float EMOTION_HOLD_S = 0.3;       // Seconds Wekinator must say the same emotion before it shows, so it does not flicker.
 
 // --- Lights ---
@@ -82,15 +82,13 @@ final float LIGHT_SMOOTHING = 0.03;     // 0 to 1. Lower = slower fades between 
 final float RAINBOW_TURNS_PER_S = 0.2;  // How fast the idle rainbow turns around the ring.
 
 // --- Convexity: -1 = fully concave, 0 = flat, +1 = fully convex (the rack pushes the mirror out) ---
-final float PULSE_PERIOD_S = 4;         // Seconds for one in-and-out pulse of the curve, in idle.
-final float PULSE_AMOUNT = 0.6;         // 0 to 1. How far the idle pulse goes, both convex and concave.
+final float PULSE_PERIOD_S = 4;         // Seconds for one in-and-out pulse of the curve, in idle and when amazed.
+final float PULSE_AMOUNT = 0.6;         // 0 to 1. How far that pulse goes, both convex and concave.
 final float HAPPY_CONVEXITY = -0.8;     // Happy: how concave it goes.
 final float WINK_PUSH = 0.6;            // Wink: how far the quick push goes out.
 final float WINK_PUSH_S = 0.35;         // Wink: seconds the push lasts before it comes back.
-final float AMAZED_PULSE = 0.5;         // Amazed: how far the fast pulse goes, both convex and concave.
-final float AMAZED_PULSE_HZ = 2;        // Amazed: pulses per second.
 final float CONVEXITY_SMOOTHING = 0.04; // 0 to 1. Share of the remaining change covered each frame: lower = slower.
-final float CONVEXITY_FAST = 0.4;       // The same, for the wink push and the amazed pulse.
+final float CONVEXITY_FAST = 0.4;       // The same, for the quick wink push.
 
 final int OSC_PORT = 12000;             // UDP port to listen on. Must match PROCESSING_PORT in face_tracker.py.
 // ====================================================================
@@ -380,8 +378,7 @@ void updateConvexity() {
     wantedConvexity = secondsOfEmotion < WINK_PUSH_S ? WINK_PUSH : 0;
     smoothing = CONVEXITY_FAST;
   } else if (emotion.equals("amazed")) {
-    wantedConvexity = AMAZED_PULSE * sin(TWO_PI * AMAZED_PULSE_HZ * secondsOfEmotion);
-    smoothing = CONVEXITY_FAST;
+    wantedConvexity = PULSE_AMOUNT * sin(TWO_PI * secondsOfEmotion / PULSE_PERIOD_S);  // The idle pulse.
   } else {
     wantedConvexity = 0;  // Neutral: flat.
   }

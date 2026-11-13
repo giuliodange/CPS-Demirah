@@ -13,7 +13,7 @@ ESP32-CAM -> Python + MediaPipe -> Wekinator -> Processing -> Arduino -> motors,
 | If not | Fix |
 |---|---|
 | The page doesn't load | Turn on the phone hotspot, keep its settings screen open, and press reset on the ESP32-CAM. Read the new address in its Serial Monitor (115200 baud) |
-| `Brownout detector was triggered` | Weak 5 V: power it from the Power Board's `5V` pin, not `VCC` |
+| `Brownout detector was triggered` | Weak 5 V: power the camera's `5V` pin from the power board |
 | `Camera init failed` | Reseat the camera's ribbon cable |
 
 ## 2. Does Python see the face?

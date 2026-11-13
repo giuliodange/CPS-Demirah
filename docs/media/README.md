@@ -1,17 +1,20 @@
 # Media
 
-Files used by the documentation. Replace each TODO with the real file, using the same name.
+The images below are **placeholders**. Replace each file with the real one, keeping the same name and folder, and the pages update by themselves.
 
-| File | Shows | Used in | Status |
-|---|---|---|---|
-| `model.jpg` | The whole model | README, mechanical.md | Done |
-| `twin-idle.jpg`, `twin-tracking.jpg` | Digital twin screenshots | README | Done |
-| `demo.mp4`, or a link in the README | A person walking up: greeting, tracking, emotions, leaving (sad) | README | TODO |
-| `base-bearing.jpg` | The steel-ball bearing, opened | mechanical.md | TODO |
-| `tilt-pulleys.jpg` | The cord and the two pulleys inside the body | mechanical.md | TODO |
-| `head-rack.jpg` | The servo and the rack behind the mirror | mechanical.md | TODO |
-| `led-ring.jpg` | The LEDs in the acrylic frame, switched on | hardware.md | TODO |
-| `wiring.jpg` | The electronics in the base | hardware.md | TODO |
-| `wekinator.png` | Wekinator during training | machine-learning.md | TODO |
+| File | What it must show | Used in |
+|---|---|---|
+| `product/spin.gif` | The model turning 360° | README |
+| `product/exploded.gif` | The model opening into an exploded view | README |
+| `product/product-front.jpg`, `-right`, `-left`, `-back` | The finished mirror from four sides, on a plain background, all the same size | README |
+| `assembly/step-01.jpg` to `step-10.jpg` | One picture per assembly step, in the same style and from the same angle | assembly.md |
+| `process/prototype-1.jpg`, `prototype-2.jpg` | Earlier prototypes | mechanical.md |
 
-GitHub shows videos up to 10 MB in the repository. For longer videos, upload to YouTube or Vimeo and link them.
+Already final:
+
+| File | Shows |
+|---|---|
+| `process/prototype-3.jpg` | The structure before the mirror and LEDs were fitted |
+| `twin/twin-idle.jpg`, `twin/twin-tracking.jpg` | Screenshots of the on-screen simulation |
+
+Keep each GIF under 10 MB, so GitHub shows it in the page. A good width is 600 to 800 pixels.

@@ -6,3 +6,5 @@ __pycache__/
 *.autosave
 # Wi-Fi password for the ESP32-CAM: copy secrets.example.h to secrets.h, never commit it
 esp32_cam/CameraWebServer/secrets.h
+# Wekinator project and training data: kept on our computers, not needed in the repository
+wekinator/
