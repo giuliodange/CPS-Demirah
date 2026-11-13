@@ -69,11 +69,20 @@ The camera turns with the mirror, so the offset of the face from the centre of t
 2. **Upload once:** `arduino/mirror/mirror.ino` to the Arduino Nano Every. For the camera, copy `secrets.example.h` to `secrets.h`, add the Wi-Fi details, and upload `esp32_cam/CameraWebServer` to the ESP32-CAM.
 3. **Start, in this order:**
    1. Put the mirror at rest by hand (base centred, head down) and switch on the power board.
-   2. Open the trained project in Wekinator and click **Run**.
+   2. Open the trained project in Wekinator and click **Run** (see [Training the model](#training-the-model)).
    3. Run `processing/mirror.pde`.
    4. Run the tracker: `.venv/bin/python python/face_tracker.py`
 
 The system then runs without intervention.
+
+### Training the model
+
+The trained model is not in the repository: the brief asks only for its key parameters, in [machine-learning.md](docs/machine-learning.md). To train it:
+
+1. Run the tracker. It sends 15 expression scores to port 6448 (`/wek/inputs`).
+2. In Wekinator, create a project with **15 inputs**, and **1 output** of type classifier with **4 classes**, sent to port **12000** (`/wek/outputs`). Choose **k-nearest neighbour, k = 1**.
+3. For each class (1 neutral, 2 happy, 3 wink, 4 amazed), press **Start recording**, hold the expression for a few seconds while moving your head and changing distance, then stop. Repeat with every person.
+4. Press **Train**, then **Run**, then start `processing/mirror.pde`. The `EMOTION` line on screen shows the class received.
 
 ### Simulation
 
