@@ -1,8 +1,7 @@
 # Demirah: an interactive mirror
 
 **Cyber Physical Systems, IDE 2026-27 (Imperial College London / Royal College of Art)**
-
-Ruoxin Chen, Indiana Gothard, Giulio d'Angelantonio
+*Ruoxin Chen, Indiana Gothard, Giulio d'Angelantonio*
 
 Demirah is a mirror that behaves like a small creature. It turns to face you, greets you, and answers your expression with light and with the shape of its own surface. When you leave, it lowers its head and goes back to rest.
 
