@@ -80,7 +80,8 @@ The system then runs without intervention.
 
 ### Training the model
 
-The trained model is not in the repository: the brief asks only for its key parameters, in [machine-learning.md](docs/machine-learning.md). To train it:
+The trained model is not in the repository: find its key parameters in [machine-learning.md](docs/machine-learning.md). 
+To train it:
 
 1. Run the tracker. It sends 15 expression scores to port 6448 (`/wek/inputs`).
 2. In Wekinator, create a project with **15 inputs**, and **1 output** of type classifier with **4 classes**, sent to port **12000** (`/wek/outputs`). Choose **k-nearest neighbour, k = 1**.
