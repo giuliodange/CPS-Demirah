@@ -1,11 +1,18 @@
 # Machine learning
 
-**Software.** MediaPipe Face Landmarker turns each camera frame into facial blendshape scores, and `face_tracker.py` sends 15 of them (smile, blink, squint, brow and mouth movements) to **Wekinator**. Wekinator returns one of four classes: neutral, happy, wink, amazed.
+**Software.** MediaPipe Face Landmarker converts each camera frame into facial blendshape scores. `face_tracker.py` sends 15 of them (smile, blink, squint, brow and mouth movements) to **Wekinator**, which returns one of four classes: neutral, happy, wink or amazed.
 
-**Choices.** We used blendshape scores instead of pixels, so the model learns facial movements and ignores background and lighting. We tested Wekinator's *All continuous* and *All classifiers* output types: the classifier was more accurate and always returns one class, while the continuous output passed through intermediate values between expressions.
+**Choices.** Blendshape scores, rather than pixels, make the model independent of background and lighting. Wekinator's *All classifiers* output was more accurate than *All continuous* and always returns one class, never a value between two expressions.
 
-**Training data.** 965 examples from 10 people, varied in facial features, sex and age. Each person held every expression while turning their head and changing distance. Training on several people made the model more reliable on new faces than training on one.
+**Training data.** Over 1,000 examples from 10 people of varied facial features, sex and age, each holding every expression while turning their head and changing distance. Training on several people made the model more reliable on new faces.
 
-**Steps.** Run `face_tracker.py`. In Wekinator, create a project with 15 inputs (port 6448) and one classifier output with 4 classes (port 12000). Record each class, repeat with every person, then Train and Run.
+**Steps.** Run `face_tracker.py`. In Wekinator, create a project with 15 inputs (port 6448) and one classifier output with 4 classes (port 12000). Record each class with every person, then Train and Run.
 
-**Further work and limits.** More people, ages and lighting conditions, and frame sequences for winks, would improve accuracy. Covered or turned faces stay unreadable, and posed expressions differ from spontaneous ones.
+**Further development.**
+
+1. More people and lighting conditions, for better accuracy on new users.
+2. More expressions, and a study of how users react to sudden changes in curvature.
+3. Deeper interaction: body language, layered responses, reflected light or sound.
+4. Several users at once, through group dynamics.
+
+**Limits.** Covered or turned faces cannot be read, and posed expressions differ from spontaneous ones.
